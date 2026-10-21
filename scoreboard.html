@@ -699,12 +699,10 @@ function initRealtime() {
     const sb = getSB();
     const channel = sb.channel(`scoreboard-${EVENT_ID}`)
       .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'dc_results',
-        filter: `event_id=eq.${EVENT_ID}`
+        event: '*', schema: 'public', table: 'dc_results'
       }, () => { console.log('Realtime: dc_results change'); refresh(); })
       .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'dc_athletes',
-        filter: `event_id=eq.${EVENT_ID}`
+        event: '*', schema: 'public', table: 'dc_athletes'
       }, () => { console.log('Realtime: dc_athletes change'); refresh(); })
       .subscribe((status) => {
         console.log('Realtime status:', status);
