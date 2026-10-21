@@ -276,7 +276,16 @@
         <div class="athlete-card-id" id="cardAthleteId">—</div>
         <div style="font-weight:700;color:var(--brand);font-size:1rem;" id="cardAthleteName">—</div>
       </div>
-      <span class="status-badge pending" id="cardStatus">Pending</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="status-badge pending" id="cardStatus">Pending</span>
+        <button onclick="resetToScanner()" style="
+          padding:8px 14px; background:var(--gray-light); color:var(--brand);
+          font-family:var(--display); font-weight:800; font-size:0.8rem;
+          border:1.5px solid var(--gray-mid); border-radius:8px; cursor:pointer;
+          white-space:nowrap;">
+          📷 Scan Next
+        </button>
+      </div>
     </div>
 
     <!-- Event blocks injected by JS -->
@@ -471,15 +480,19 @@ function doLogin() {
 // ════════════════════════════════════════════
 // QR SCANNER
 // ════════════════════════════════════════════
+let qrScanner = null;
+
 function initScanner() {
-  const html5QrCode = new Html5Qrcode('reader');
-  html5QrCode.start(
+  document.getElementById('reader').innerHTML = ''; // clear any prior state
+  qrScanner = new Html5Qrcode('reader');
+  qrScanner.start(
     { facingMode: 'environment' },
     { fps: 10, qrbox: { width: 250, height: 250 } },
     (decodedText) => {
       const match = decodedText.match(/DC\d{2}-\d{4}/i);
       if (match) {
-        html5QrCode.stop().catch(() => {});
+        qrScanner.stop().catch(() => {});
+        qrScanner = null;
         loadAthlete(match[0].toUpperCase());
       }
     },
@@ -488,6 +501,23 @@ function initScanner() {
     document.getElementById('reader').innerHTML =
       '<div style="padding:16px;font-size:0.82rem;color:var(--gray);text-align:center;">Camera unavailable — use manual ID entry.</div>';
   });
+}
+
+function resetToScanner() {
+  // Hide athlete card, scroll up, restart scanner
+  currentAthlete = null;
+  attempts = {};
+  document.getElementById('athleteCard').classList.remove('visible');
+  document.getElementById('manualId').value = '';
+  document.querySelector('.scan-box').scrollIntoView({ behavior: 'smooth' });
+  // Small delay so DOM scrolls before camera reinits
+  setTimeout(() => {
+    if (qrScanner) {
+      qrScanner.stop().catch(() => {}).finally(() => { qrScanner = null; initScanner(); });
+    } else {
+      initScanner();
+    }
+  }, 300);
 }
 
 // ════════════════════════════════════════════
