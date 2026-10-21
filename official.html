@@ -439,19 +439,27 @@ function bestAttempt(eventId, attempts) {
 // SUPABASE DATA LAYER
 // ════════════════════════════════════════════
 async function persistAttempt(athleteId, eventId, attemptNum, value) {
-  const sb = getSB();
-  const { error } = await sb.from('dc_results').insert({
-    event_id:     EVENT_ID,
-    athlete_id:   athleteId,
-    athlete_name: currentAthleteName || athleteId,
-    event:        eventId,
-    attempt_num:  attemptNum,
-    value:        value,
-    score:        calcScore(eventId, value),
-    official_id:  currentOfficialId,
-    voided:       false
-  });
-  if (error) console.error('persistAttempt error:', error);
+  try {
+    const sb = getSB();
+    const { error } = await sb.from('dc_results').insert({
+      event_id:     EVENT_ID,
+      athlete_id:   athleteId,
+      athlete_name: currentAthleteName || athleteId,
+      event:        eventId,
+      attempt_num:  attemptNum,
+      value:        value,
+      score:        calcScore(eventId, value),
+      official_id:  currentOfficialId,
+      voided:       false
+    });
+    if (error) {
+      alert('Save error: ' + JSON.stringify(error));
+      console.error('persistAttempt error:', error);
+    }
+  } catch(e) {
+    alert('Save exception: ' + e.message);
+    console.error('persistAttempt exception:', e);
+  }
 }
 
 // ════════════════════════════════════════════
