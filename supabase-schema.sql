@@ -104,3 +104,76 @@ create policy "officials_public_read"   on dc_officials for select using (true);
 create policy "officials_anon_insert"   on dc_officials for insert with check (true);
 create policy "officials_anon_update"   on dc_officials for update using (true);
 create policy "officials_anon_delete"   on dc_officials for delete using (true);
+
+-- ------------------------------------------------------------
+-- 5. DC_DEMO_CODES  (one row per prospect demo session)
+-- ------------------------------------------------------------
+-- Demo event slugs use the pattern: 'demo-XXXXXX' (6 random alphanumeric chars)
+-- Each prospect gets their own isolated event slug so results never cross-pollinate.
+-- Expired sessions are cleaned up nightly by pg_cron (see section 7 below).
+-- ------------------------------------------------------------
+create table if not exists dc_demo_codes (
+  id           uuid primary key default gen_random_uuid(),
+  code         text not null unique,          -- 6-digit numeric code sent to prospect
+  event_id     text not null,                 -- generated slug e.g. 'demo-a3f9k2'
+  email        text not null,
+  name         text not null,
+  org          text,
+  activated_at timestamptz,                   -- set when prospect first uses the code
+  expires_at   timestamptz not null,          -- default now() + 48 hours
+  created_at   timestamptz default now()
+);
+
+create index if not exists idx_dc_demo_codes_code     on dc_demo_codes(code);
+create index if not exists idx_dc_demo_codes_event_id on dc_demo_codes(event_id);
+create index if not exists idx_dc_demo_codes_expires  on dc_demo_codes(expires_at);
+
+-- DC_DEMO_CODES — public SELECT by code (gate check) + anon INSERT (request form) + anon UPDATE (mark activated)
+alter table dc_demo_codes enable row level security;
+create policy "demo_codes_public_read"   on dc_demo_codes for select using (true);
+create policy "demo_codes_anon_insert"   on dc_demo_codes for insert with check (true);
+create policy "demo_codes_anon_update"   on dc_demo_codes for update using (true);
+create policy "demo_codes_anon_delete"   on dc_demo_codes for delete using (true);
+
+-- ------------------------------------------------------------
+-- 6. EVENTS — also allow anon INSERT (for demo event slug creation via Edge Function)
+-- ------------------------------------------------------------
+create policy "events_anon_insert"  on events for insert with check (true);
+create policy "events_anon_delete"  on events for delete using (true);
+
+-- ------------------------------------------------------------
+-- 7. PG_CRON — nightly demo session cleanup
+-- ------------------------------------------------------------
+-- Run this ONCE in Supabase SQL Editor to register the cron job.
+-- Requires pg_cron extension (enabled by default on Supabase Pro).
+--
+-- select cron.schedule(
+--   'cleanup-expired-demo-sessions',   -- job name
+--   '0 4 * * *',                       -- 4am UTC daily
+--   $$
+--     delete from events
+--     where id like 'demo-%'
+--       and id in (
+--         select event_id from dc_demo_codes
+--         where expires_at < now()
+--       );
+--   $$
+-- );
+--
+-- The DELETE on events cascades to dc_athletes, dc_results, dc_officials
+-- (all have ON DELETE CASCADE on event_id FK).
+-- dc_demo_codes rows are NOT cascaded — they are deleted explicitly:
+--
+-- select cron.schedule(
+--   'cleanup-expired-demo-codes',
+--   '0 4 * * *',
+--   $$
+--     delete from dc_demo_codes where expires_at < now();
+--   $$
+-- );
+--
+-- To verify jobs are registered:
+--   select * from cron.job;
+-- To unschedule:
+--   select cron.unschedule('cleanup-expired-demo-sessions');
+--   select cron.unschedule('cleanup-expired-demo-codes');

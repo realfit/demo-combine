@@ -17,6 +17,17 @@
 </head>
 <body>
 
+<!-- Demo Mode banner -->
+<div id="demo-banner" style="display:none;background:#7c3aed;color:#fff;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-align:center;padding:7px 16px;position:sticky;top:0;z-index:100;">
+  🔬 Demo Mode — your results are private and temporary
+</div>
+<script>
+  (function(){
+    const e = new URLSearchParams(window.location.search).get('event') || '';
+    if (e.startsWith('demo-')) document.getElementById('demo-banner').style.display = 'block';
+  })();
+</script>
+
 <!-- Nav -->
 <nav>
   <div class="nav-logo"><a href="index.html">Score<span>My</span>Combine</a></div>

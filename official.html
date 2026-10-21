@@ -10,7 +10,9 @@
   <script>
   const SUPABASE_URL  = 'https://oldsraltxmkghplaqabl.supabase.co';
   const SUPABASE_ANON = 'sb_publishable_LHsiVA3k1IK3nvhcQNKnEg_QKPhrGr8';
-  const EVENT_ID = (() => { const p = new URLSearchParams(window.location.search); return p.get('event') || 'demo'; })();
+  // EVENT_ID: if ?event= param exists use it; otherwise start as null until demo code resolves it
+  let EVENT_ID = (() => { const p = new URLSearchParams(window.location.search); return p.get('event') || null; })();
+  const IS_DEMO_MODE = !EVENT_ID || EVENT_ID.startsWith('demo-');
   let _sb = null;
   function getSB() {
     if (!_sb) _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -233,9 +235,54 @@
       border: none; border-radius: 8px; cursor: pointer;
     }
     .login-error { color: #dc2626; font-size: 0.8rem; margin-top: 8px; display: none; }
+
+    /* ── Demo Mode banner ── */
+    #demo-banner {
+      display: none;
+      background: #7c3aed; color: #fff;
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      text-align: center; padding: 7px 16px;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 998;
+    }
+
+    /* ── Demo code gate screen ── */
+    #demo-gate-screen {
+      position: fixed; inset: 0; background: var(--brand);
+      display: flex; align-items: center; justify-content: center; z-index: 1000;
+    }
+    #demo-gate-screen .login-card .gate-back {
+      font-size: 0.78rem; color: var(--gray); margin-top: 16px;
+      cursor: pointer; text-decoration: underline; display: inline-block;
+    }
   </style>
 </head>
 <body>
+
+<!-- Demo Mode banner (shown after demo code login) -->
+<div id="demo-banner">🔬 Demo Mode — your results are private and temporary</div>
+
+<!-- Demo code gate (shown first when no ?event= param or ?event=demo-*) -->
+<div id="demo-gate-screen" style="display:none;">
+  <div class="login-card">
+    <div style="font-family:var(--display);font-size:1.4rem;font-weight:900;margin-bottom:4px;">Demo Access</div>
+    <p>Enter your 6-digit demo code to get started.<br>
+       <span style="font-size:0.78rem;">Don't have one? <a href="index.html" style="color:var(--accent);text-decoration:underline;">Request access →</a></span>
+    </p>
+    <input type="text" id="demoCodeInput" placeholder="123456" maxlength="6"
+           inputmode="numeric" pattern="[0-9]*"
+           style="letter-spacing:.2em;font-size:1.4rem;text-align:center;font-weight:700;"
+           oninput="this.value=this.value.replace(/\D/g,'')"
+           onkeydown="if(event.key==='Enter')checkDemoCode()">
+    <button onclick="checkDemoCode()" id="demoGateBtn">Continue →</button>
+    <div class="login-error" id="demo-gate-error">Invalid or expired demo code.</div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #eee;">
+      <div style="font-size:0.72rem;color:var(--gray);margin-bottom:8px;">Already have official credentials?</div>
+      <button onclick="skipDemoGate()" style="background:#f3f4f6;color:#374151;font-size:0.82rem;padding:9px;">
+        Official / Admin Login →
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- Login gate -->
 <div id="login-screen">
@@ -479,6 +526,78 @@ let attempts = {};
 // ════════════════════════════════════════════
 const PASSCODE = 'realfit2026'; // fallback hardcoded passcode (accepts any official name)
 let currentOfficialId = '';
+
+// ── Demo gate ──────────────────────────────────────────────
+// Show demo gate if no ?event= in URL, or if event starts with 'demo-'
+// Real officials bypass via "Official / Admin Login" button (skipDemoGate)
+(function initGate() {
+  const params = new URLSearchParams(window.location.search);
+  const eventParam = params.get('event');
+  if (!eventParam) {
+    // No event param — show demo gate
+    document.getElementById('demo-gate-screen').style.display = 'flex';
+  } else if (eventParam.startsWith('demo-')) {
+    // Demo event slug in URL — activate demo mode directly (came from email link)
+    EVENT_ID = eventParam;
+    activateDemoMode();
+  } else {
+    // Real event — go straight to passcode login
+    EVENT_ID = eventParam;
+  }
+})();
+
+function activateDemoMode() {
+  document.getElementById('demo-banner').style.display = 'block';
+  document.getElementById('demo-gate-screen').style.display = 'none';
+  // Pre-fill official name hint for demo users
+  const nameInput = document.getElementById('officialIdInput');
+  if (nameInput && !nameInput.value) nameInput.placeholder = 'Your name (you are your own official)';
+}
+
+async function checkDemoCode() {
+  const code = document.getElementById('demoCodeInput').value.trim();
+  const btn  = document.getElementById('demoGateBtn');
+  const err  = document.getElementById('demo-gate-error');
+  err.style.display = 'none';
+  if (code.length !== 6) { err.style.display = 'block'; return; }
+
+  btn.textContent = 'Checking…';
+  btn.disabled = true;
+
+  try {
+    const sb = getSB();
+    const { data, error } = await sb.from('dc_demo_codes')
+      .select('event_id, expires_at, activated_at')
+      .eq('code', code)
+      .maybeSingle();
+
+    if (error || !data) throw new Error('not found');
+    if (new Date(data.expires_at) < new Date()) throw new Error('expired');
+
+    // Valid — set EVENT_ID and mark activated
+    EVENT_ID = data.event_id;
+    if (!data.activated_at) {
+      await sb.from('dc_demo_codes').update({ activated_at: new Date().toISOString() }).eq('code', code);
+    }
+    // Update URL so page can be reloaded or shared with the event slug
+    const url = new URL(window.location.href);
+    url.searchParams.set('event', EVENT_ID);
+    window.history.replaceState({}, '', url.toString());
+
+    activateDemoMode();
+  } catch(ex) {
+    err.textContent = ex.message === 'expired' ? 'This demo code has expired.' : 'Invalid or expired demo code.';
+    err.style.display = 'block';
+    btn.textContent = 'Continue →';
+    btn.disabled = false;
+  }
+}
+
+function skipDemoGate() {
+  // Real official / admin — use main demo event, skip demo gate
+  if (!EVENT_ID) EVENT_ID = 'demo';
+  document.getElementById('demo-gate-screen').style.display = 'none';
+}
 
 async function doLogin() {
   const pass = document.getElementById('passcode').value.trim();

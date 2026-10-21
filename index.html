@@ -478,6 +478,134 @@ body::before {
   border-radius: 2px;
 }
 
+/* ── Demo Access section ── */
+.demo-section {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+.demo-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 40px 36px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.demo-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.demo-icon {
+  width: 44px; height: 44px;
+  background: var(--accent-light);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.demo-icon svg { color: var(--accent); }
+.demo-card-header h3 {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+.demo-card-header p {
+  font-size: 0.85rem;
+  color: var(--fg-mid);
+  line-height: 1.5;
+}
+.demo-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.demo-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 500px) {
+  .demo-form-row { grid-template-columns: 1fr; }
+  .demo-card { padding: 28px 20px; }
+}
+.demo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.demo-field label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--fg-mid);
+  letter-spacing: 0.03em;
+}
+.demo-field input {
+  padding: 10px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.demo-field input:focus { border-color: var(--accent); }
+.demo-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 13px 24px;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  width: 100%;
+  margin-top: 4px;
+}
+.demo-submit:hover { opacity: 0.88; }
+.demo-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.demo-success {
+  display: none;
+  text-align: center;
+  padding: 24px 0 8px;
+}
+.demo-success-icon {
+  width: 52px; height: 52px;
+  background: #dcfce7;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+}
+.demo-success h4 {
+  font-family: var(--display);
+  font-size: 1.3rem;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+.demo-success p { font-size: 0.88rem; color: var(--fg-mid); line-height: 1.6; }
+.demo-error {
+  display: none;
+  font-size: 0.82rem;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+
 /* ── Footer ── */
 footer {
   background: var(--hero-bg);
@@ -655,9 +783,95 @@ footer a:hover { color: #fff; }
   </div>
 </section>
 
+<!-- Demo Access -->
+<section class="section demo-section">
+  <div class="section-inner">
+    <div class="section-label">Try it yourself</div>
+    <h2 style="text-align:center;margin-bottom:32px;">Request Demo Access</h2>
+    <div class="demo-card">
+      <div class="demo-card-header">
+        <div class="demo-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+          <h3>Enter Your Own Results</h3>
+          <p>Register as an athlete, then use your demo code to act as your own official — scan your QR and enter your results. See yourself rank live against our benchmark athletes.</p>
+        </div>
+      </div>
+      <form class="demo-form" id="demoRequestForm" onsubmit="submitDemoRequest(event)">
+        <div class="demo-form-row">
+          <div class="demo-field">
+            <label for="demoName">Your Name *</label>
+            <input type="text" id="demoName" placeholder="First Last" required autocomplete="name">
+          </div>
+          <div class="demo-field">
+            <label for="demoEmail">Email Address *</label>
+            <input type="email" id="demoEmail" placeholder="you@example.com" required autocomplete="email">
+          </div>
+        </div>
+        <div class="demo-field">
+          <label for="demoOrg">Organization <span style="font-weight:400;opacity:.6;">(optional)</span></label>
+          <input type="text" id="demoOrg" placeholder="Team, school, or company">
+        </div>
+        <div class="demo-error" id="demoError"></div>
+        <button class="demo-submit" type="submit" id="demoSubmitBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          Send My Demo Code
+        </button>
+      </form>
+      <div class="demo-success" id="demoSuccess">
+        <div class="demo-success-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h4>Check your email!</h4>
+        <p>Your 6-digit demo code is on its way to <strong id="demoSuccessEmail"></strong>.<br>Use it on the Official page to enter your results.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- Footer -->
 <footer>
-  <div class="footer-logo">Score<span>My</span>Combine</div>
+  <script>
+const SUPABASE_EDGE_URL = 'https://oldsraltxmkghplaqabl.supabase.co/functions/v1/request-demo';
+
+async function submitDemoRequest(e) {
+  e.preventDefault();
+  const btn   = document.getElementById('demoSubmitBtn');
+  const err   = document.getElementById('demoError');
+  const form  = document.getElementById('demoRequestForm');
+  const succ  = document.getElementById('demoSuccess');
+  const email = document.getElementById('demoEmail').value.trim();
+
+  err.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  try {
+    const res = await fetch(SUPABASE_EDGE_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name:  document.getElementById('demoName').value.trim(),
+        email,
+        org:   document.getElementById('demoOrg').value.trim() || null,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Request failed');
+    form.style.display = 'none';
+    document.getElementById('demoSuccessEmail').textContent = email;
+    succ.style.display = 'block';
+  } catch (ex) {
+    err.textContent = ex.message || 'Something went wrong. Please try again.';
+    err.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg> Send My Demo Code';
+  }
+}
+</script>
+
+<div class="footer-logo">Score<span>My</span>Combine</div>
   <p>A <a href="https://realfit.com">REALFIT</a> platform · Powered by <a href="https://fitdat.com">FITDAT</a></p>
   <p style="margin-top:6px;">
     <a href="https://demo.scoremycombine.com/register.html">Register</a> ·

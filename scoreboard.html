@@ -10,7 +10,8 @@
   <script>
   const SUPABASE_URL  = 'https://oldsraltxmkghplaqabl.supabase.co';
   const SUPABASE_ANON = 'sb_publishable_LHsiVA3k1IK3nvhcQNKnEg_QKPhrGr8';
-  const EVENT_ID = (() => { const p = new URLSearchParams(window.location.search); return p.get('event') || 'demo'; })();
+  const EVENT_ID      = (() => { const p = new URLSearchParams(window.location.search); return p.get('event') || 'demo'; })();
+  const IS_DEMO_EVENT = EVENT_ID.startsWith('demo-'); // private prospect session
   let _sb = null;
   function getSB() { if (!_sb) _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON); return _sb; }
   </script>
@@ -166,6 +167,12 @@
   </style>
 </head>
 <body>
+
+<!-- Demo Mode banner (shown for demo-* events) -->
+<div id="demo-banner" style="display:none;background:#7c3aed;color:#fff;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-align:center;padding:7px 16px;">
+  🔬 Demo Mode — private scoreboard · results expire in 48 hours
+</div>
+<script>if (IS_DEMO_EVENT) document.getElementById('demo-banner').style.display = 'block';</script>
 
 <!-- Nav -->
 <nav>
@@ -603,28 +610,12 @@ const REFRESH_INTERVAL_MS = 5000; // 5 seconds — fallback polling if Realtime 
 
 async function fetchResults() {
   // ── Supabase fetch ──
-  // Pulls registered athletes + results for the current event,
-  // merges them into the same athlete map the render pipeline expects.
-  // Falls back to DEMO_ATHLETES seed data on any error.
+  // For demo-* events: fetches prospect's own athletes+results AND global seed
+  // athletes from the 'demo' event, merging them into one ranked field.
+  // For all other events: fetches that event's data + local DEMO_ATHLETES seed fallback.
   const MAX_ATTEMPTS = { pullup: 1, dash: 2, jump: 3 };
 
-  try {
-    const sb = getSB();
-
-    // Fetch athletes and results in parallel
-    const [{ data: athleteRows, error: aErr }, { data: resultRows, error: rErr }] =
-      await Promise.all([
-        sb.from('dc_athletes').select('*').eq('event_id', EVENT_ID),
-        sb.from('dc_results').select('*').eq('event_id', EVENT_ID).eq('voided', false)
-      ]);
-
-    if (aErr) throw aErr;
-    if (rErr) throw rErr;
-
-    // If no live data at all, show seed data
-    if (!athleteRows.length && !resultRows.length) return DEMO_ATHLETES;
-
-    // Build map from registered athletes
+  function buildAthleteMap(athleteRows, resultRows) {
     const map = {};
     athleteRows.forEach(a => {
       map[a.athlete_id] = {
@@ -635,8 +626,6 @@ async function fetchResults() {
         pullupAttempts: 0, dashAttempts: 0, jumpAttempts: 0
       };
     });
-
-    // Layer in results
     resultRows.forEach(r => {
       if (!map[r.athlete_id]) {
         map[r.athlete_id] = {
@@ -651,17 +640,11 @@ async function fetchResults() {
       const isBetter = cur == null || (r.event === 'dash' ? r.value < cur : r.value > cur);
       if (isBetter) map[r.athlete_id][r.event] = Number(r.value);
     });
+    return map;
+  }
 
-    // Build athlete rows with FINAL/PRELIM status
-    const liveIds = new Set(Object.keys(map));
-    const seedRows = DEMO_ATHLETES.filter(a => !liveIds.has(a.id));
-    seedRows.forEach(a => {
-      a.pullupStatus = a.pullup != null ? 'FINAL' : null;
-      a.dashStatus   = a.dash   != null ? 'FINAL' : null;
-      a.jumpStatus   = a.jump   != null ? 'FINAL' : null;
-    });
-
-    const liveRows = Object.values(map).map(a => {
+  function toRows(map) {
+    return Object.values(map).map(a => {
       function eventStatus(evt) {
         if (a[evt] == null) return null;
         return a[evt + 'Attempts'] >= MAX_ATTEMPTS[evt] ? 'FINAL' : 'PRELIM';
@@ -672,6 +655,70 @@ async function fetchResults() {
         dash:   a.dash,   dashStatus:   eventStatus('dash'),
         jump:   a.jump,   jumpStatus:   eventStatus('jump'),
       };
+    });
+  }
+
+  try {
+    const sb = getSB();
+
+    if (IS_DEMO_EVENT) {
+      // Fetch prospect's event AND the global 'demo' seed event in parallel
+      const [
+        { data: prospectAthletes, error: paErr },
+        { data: prospectResults,  error: prErr },
+        { data: seedAthletes,     error: saErr },
+        { data: seedResults,      error: srErr },
+      ] = await Promise.all([
+        sb.from('dc_athletes').select('*').eq('event_id', EVENT_ID),
+        sb.from('dc_results').select('*').eq('event_id', EVENT_ID).eq('voided', false),
+        sb.from('dc_athletes').select('*').eq('event_id', 'demo'),
+        sb.from('dc_results').select('*').eq('event_id', 'demo').eq('voided', false),
+      ]);
+
+      if (paErr || prErr) throw paErr || prErr;
+
+      // Build prospect map first, then overlay seeds (don't overwrite prospect athletes)
+      const prospectMap = buildAthleteMap(prospectAthletes || [], prospectResults || []);
+      const seedMap     = buildAthleteMap(seedAthletes || [], seedResults || []);
+
+      // Merge: prospect athletes take priority; seeds fill in the rest
+      const mergedMap = { ...seedMap, ...prospectMap };
+
+      const liveRows = toRows(mergedMap);
+
+      // For any seed IDs not in the merged live map, fall back to DEMO_ATHLETES static data
+      const liveIds = new Set(Object.keys(mergedMap));
+      const staticSeeds = DEMO_ATHLETES.filter(a => !liveIds.has(a.id));
+      staticSeeds.forEach(a => {
+        a.pullupStatus = a.pullup != null ? 'FINAL' : null;
+        a.dashStatus   = a.dash   != null ? 'FINAL' : null;
+        a.jumpStatus   = a.jump   != null ? 'FINAL' : null;
+      });
+
+      return [...liveRows, ...staticSeeds];
+    }
+
+    // ── Standard event fetch ──
+    const [{ data: athleteRows, error: aErr }, { data: resultRows, error: rErr }] =
+      await Promise.all([
+        sb.from('dc_athletes').select('*').eq('event_id', EVENT_ID),
+        sb.from('dc_results').select('*').eq('event_id', EVENT_ID).eq('voided', false)
+      ]);
+
+    if (aErr) throw aErr;
+    if (rErr) throw rErr;
+
+    // If no live data at all, show static seed data
+    if (!athleteRows.length && !resultRows.length) return DEMO_ATHLETES;
+
+    const map = buildAthleteMap(athleteRows, resultRows);
+    const liveRows = toRows(map);
+    const liveIds = new Set(Object.keys(map));
+    const seedRows = DEMO_ATHLETES.filter(a => !liveIds.has(a.id));
+    seedRows.forEach(a => {
+      a.pullupStatus = a.pullup != null ? 'FINAL' : null;
+      a.dashStatus   = a.dash   != null ? 'FINAL' : null;
+      a.jumpStatus   = a.jump   != null ? 'FINAL' : null;
     });
 
     return [...liveRows, ...seedRows];

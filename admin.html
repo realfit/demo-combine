@@ -224,6 +224,26 @@
     .empty-notice {
       text-align: center; padding: 40px 24px; color: var(--gray); font-size: 0.88rem;
     }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block; padding: 2px 7px; border-radius: 12px;
+      font-size: .7rem; font-weight: 700; letter-spacing: .04em; white-space: nowrap;
+    }
+    .badge-green  { background: #dcfce7; color: #16a34a; }
+    .badge-yellow { background: #fef9c3; color: #a16207; }
+    .badge-gray   { background: #f3f4f6; color: #6b7280; }
+    .badge-blue   { background: #dbeafe; color: #1d4ed8; }
+
+    /* ── Small action buttons ── */
+    .btn-xs {
+      padding: 3px 8px; border-radius: 5px; font-size: .72rem; font-weight: 600;
+      cursor: pointer; border: 1.5px solid; white-space: nowrap;
+    }
+    .btn-xs.btn-outline        { border-color: var(--accent,#2563eb); color: var(--accent,#2563eb); background: transparent; }
+    .btn-xs.btn-outline:hover  { background: #eff6ff; }
+    .btn-xs.btn-danger-outline { border-color: #dc2626; color: #dc2626; background: transparent; }
+    .btn-xs.btn-danger-outline:hover { background: #fef2f2; }
   </style>
 </head>
 <body>
@@ -301,6 +321,9 @@
   </button>
   <button class="admin-tab" onclick="switchTab('export', this)">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export
+  </button>
+  <button class="admin-tab" onclick="switchTab('demo', this)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:5px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Demo
   </button>
 </div>
 
@@ -517,6 +540,61 @@
   </div>
 </div>
 
+<!-- ══ DEMO ══ -->
+<div class="admin-panel" id="panel-demo">
+  <div class="admin-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+      <div>
+        <h2 style="margin-bottom:4px;">Demo Access</h2>
+        <div class="subtitle">Manage prospect demo sessions and send invites.</div>
+      </div>
+    </div>
+
+    <!-- Funnel stats -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;" id="demo-stats-grid">
+      <div class="stat-tile"><div class="stat-value" id="demo-stat-total">—</div><div class="stat-label">Total Requests</div></div>
+      <div class="stat-tile"><div class="stat-value" id="demo-stat-activated">—</div><div class="stat-label">Activated</div></div>
+      <div class="stat-tile"><div class="stat-value" id="demo-stat-results">—</div><div class="stat-label">Entered Results</div></div>
+    </div>
+
+    <!-- Send invite -->
+    <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:18px 20px;margin-bottom:24px;">
+      <div style="font-size:.8rem;font-weight:700;margin-bottom:12px;color:var(--fg);">Send Demo Invite</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;">
+        <div>
+          <label style="font-size:.72rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Name *</label>
+          <input type="text" id="inviteName" placeholder="First Last" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:6px;background:var(--bg-card);color:var(--fg);font-size:.88rem;">
+        </div>
+        <div>
+          <label style="font-size:.72rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Email *</label>
+          <input type="email" id="inviteEmail" placeholder="prospect@example.com" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:6px;background:var(--bg-card);color:var(--fg);font-size:.88rem;">
+        </div>
+        <button class="btn-export" id="inviteBtn" onclick="sendDemoInvite()" style="white-space:nowrap;height:36px;padding:0 16px;">Send Invite</button>
+      </div>
+      <div id="invite-msg" style="display:none;font-size:.8rem;margin-top:8px;"></div>
+    </div>
+
+    <!-- Active sessions table -->
+    <div style="font-size:.8rem;font-weight:700;margin-bottom:10px;">Active Demo Sessions</div>
+    <div style="overflow-x:auto;">
+      <table class="results-table">
+        <thead><tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Org</th>
+          <th>Code</th>
+          <th>Activated</th>
+          <th>Results</th>
+          <th>Expires</th>
+          <th>Actions</th>
+        </tr></thead>
+        <tbody id="tbody-demo-sessions"></tbody>
+      </table>
+    </div>
+    <div id="demo-sessions-empty" class="empty-notice" style="display:none;">No demo sessions yet. Send an invite above to get started.</div>
+  </div>
+</div>
+
 <!-- ══ EXPORT ══ -->
 <div class="admin-panel" id="panel-export">
   <div class="admin-card">
@@ -602,16 +680,20 @@ function doLogin() {
 // ══════════════════════════════════════════
 // DATA HELPERS (Supabase-backed, cached)
 // ══════════════════════════════════════════
+let _cachedDemoCodes = [];
+
 async function reloadData() {
   const sb = getSB();
-  const [{ data: rRows, error: rErr }, { data: aRows, error: aErr }, { data: oRows, error: oErr }] = await Promise.all([
+  const [{ data: rRows, error: rErr }, { data: aRows, error: aErr }, { data: oRows, error: oErr }, { data: dRows, error: dErr }] = await Promise.all([
     sb.from('dc_results').select('*').eq('event_id', EVENT_ID).order('timestamp', { ascending: false }),
     sb.from('dc_athletes').select('*').eq('event_id', EVENT_ID).order('registered_at', { ascending: true }),
-    sb.from('dc_officials').select('*').eq('event_id', EVENT_ID).order('created_at', { ascending: true })
+    sb.from('dc_officials').select('*').eq('event_id', EVENT_ID).order('created_at', { ascending: true }),
+    sb.from('dc_demo_codes').select('*').order('created_at', { ascending: false })
   ]);
   if (!rErr) _cachedResults   = rRows  || [];
   if (!aErr) _cachedAthletes  = aRows  || [];
   if (!oErr) _cachedOfficials = oRows  || [];
+  if (!dErr) _cachedDemoCodes = dRows  || [];
   console.log('reloadData: officials', oErr || _cachedOfficials);
 }
 
@@ -1144,11 +1226,173 @@ async function renderAll() {
   renderResults();
   renderAthletes();
   renderOfficials();
+  renderDemoSessions();
 }
 
 // Also update the label on the clear button to reflect Supabase
 document.querySelector('[onclick="clearAllResults()"]')
   ?.previousElementSibling?.setAttribute('title', 'Voids all results in Supabase for this event.');
+
+// ══════════════════════════════════════════
+// DEMO TAB
+// ══════════════════════════════════════════
+
+function fmtDateTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString([], { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function demoSessionStatus(row) {
+  const now = Date.now();
+  const exp = new Date(row.expires_at).getTime();
+  if (exp < now) return { label: 'Expired', cls: 'badge-gray' };
+  if (row.activated_at) return { label: 'Active', cls: 'badge-green' };
+  return { label: 'Pending', cls: 'badge-yellow' };
+}
+
+async function renderDemoSessions() {
+  const codes = _cachedDemoCodes;
+  const sb = getSB();
+
+  // Count results per demo event_id
+  let resultCounts = {};
+  if (codes.length) {
+    const eventIds = [...new Set(codes.map(c => c.event_id))];
+    const { data: rRows } = await sb
+      .from('dc_results')
+      .select('event_id')
+      .in('event_id', eventIds)
+      .eq('voided', false);
+    (rRows || []).forEach(r => {
+      resultCounts[r.event_id] = (resultCounts[r.event_id] || 0) + 1;
+    });
+  }
+
+  // Update funnel stat tiles
+  const total     = codes.length;
+  const activated = codes.filter(c => !!c.activated_at).length;
+  const withRes   = codes.filter(c => (resultCounts[c.event_id] || 0) > 0).length;
+  const statTotal     = document.getElementById('demo-stat-total');
+  const statActivated = document.getElementById('demo-stat-activated');
+  const statResults   = document.getElementById('demo-stat-results');
+  if (statTotal)     statTotal.textContent     = total;
+  if (statActivated) statActivated.textContent = activated;
+  if (statResults)   statResults.textContent   = withRes;
+
+  // Render table
+  const tbody = document.getElementById('tbody-demo-sessions');
+  const empty = document.getElementById('demo-sessions-empty');
+  if (!tbody) return;
+
+  if (!codes.length) {
+    tbody.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  // Table columns: Name | Email | Org | Code | Activated | Results | Expires | Actions
+  tbody.innerHTML = codes.map(row => {
+    const { label, cls } = demoSessionStatus(row);
+    const resCount = resultCounts[row.event_id] || 0;
+    const expiredOrRevoked = new Date(row.expires_at).getTime() < Date.now();
+    return `<tr>
+      <td>${escH(row.name)}</td>
+      <td style="font-size:.82rem;">${escH(row.email)}</td>
+      <td>${escH(row.org || '—')}</td>
+      <td><code style="font-size:.78rem;">${escH(row.code)}</code></td>
+      <td>${row.activated_at ? `<span class="badge badge-green">Yes</span>` : '—'}</td>
+      <td style="text-align:center;">${resCount > 0 ? `<span class="badge badge-blue">${resCount}</span>` : '—'}</td>
+      <td style="font-size:.8rem;white-space:nowrap;">${fmtDateTime(row.expires_at)} <span class="badge ${cls}" style="margin-left:4px;">${label}</span></td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${!expiredOrRevoked ? `<button class="btn-xs btn-outline" onclick="extendDemoSession('${row.id}')">+24h</button>` : ''}
+          ${!expiredOrRevoked ? `<button class="btn-xs btn-danger-outline" onclick="revokeDemoSession('${row.id}')">Revoke</button>` : ''}
+          <button class="btn-xs btn-danger-outline" onclick="deleteDemoSession('${row.id}','${row.event_id}')">Delete</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function escH(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function sendDemoInvite() {
+  const name  = document.getElementById('inviteName')?.value?.trim();
+  const email = document.getElementById('inviteEmail')?.value?.trim();
+  const org   = null; // no org field in current form
+  const btn   = document.getElementById('inviteBtn');
+  const msg   = document.getElementById('invite-msg');
+
+  if (!name || !email) {
+    if (msg) { msg.textContent = 'Name and email are required.'; msg.style.color = '#dc2626'; msg.style.display = 'block'; }
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+  if (msg) { msg.textContent = ''; msg.style.display = 'none'; }
+
+  try {
+    const resp = await fetch('https://oldsraltxmkghplaqabl.supabase.co/functions/v1/request-demo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON },
+      body: JSON.stringify({ name, email, org: org || null })
+    });
+    const json = await resp.json();
+    if (json.ok) {
+      if (msg) { msg.textContent = `✓ Invite sent to ${email}`; msg.style.color = 'var(--success,#16a34a)'; msg.style.display = 'block'; }
+      document.getElementById('inviteName').value  = '';
+      document.getElementById('inviteEmail').value = '';
+      await reloadData();
+      renderDemoSessions();
+    } else {
+      throw new Error(json.error || 'Unknown error');
+    }
+  } catch(err) {
+    if (msg) { msg.textContent = 'Error: ' + err.message; msg.style.color = 'var(--danger,#dc2626)'; msg.style.display = 'block'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Send Invite'; }
+  }
+}
+
+async function extendDemoSession(codeId) {
+  const sb = getSB();
+  const row = _cachedDemoCodes.find(c => c.id === codeId);
+  if (!row) return;
+  // Extend from current expiry (or now if already expired) by 24h
+  const base = Math.max(new Date(row.expires_at).getTime(), Date.now());
+  const newExp = new Date(base + 24 * 60 * 60 * 1000).toISOString();
+  const { error } = await sb.from('dc_demo_codes').update({ expires_at: newExp }).eq('id', codeId);
+  if (error) { alert('Extend failed: ' + error.message); return; }
+  await reloadData();
+  renderDemoSessions();
+}
+
+async function revokeDemoSession(codeId) {
+  if (!confirm('Revoke this demo code immediately? The prospect will no longer be able to access their session.')) return;
+  const sb = getSB();
+  const { error } = await sb.from('dc_demo_codes').update({ expires_at: new Date().toISOString() }).eq('id', codeId);
+  if (error) { alert('Revoke failed: ' + error.message); return; }
+  await reloadData();
+  renderDemoSessions();
+}
+
+async function deleteDemoSession(codeId, eventId) {
+  if (!confirm('Permanently delete this demo session and all associated athlete data? This cannot be undone.')) return;
+  const sb = getSB();
+  // Delete results, athletes, and the event row (cascade from event); then the code row
+  await Promise.all([
+    sb.from('dc_results').delete().eq('event_id', eventId),
+    sb.from('dc_athletes').delete().eq('event_id', eventId),
+  ]);
+  await sb.from('dc_events').delete().eq('id', eventId);
+  const { error } = await sb.from('dc_demo_codes').delete().eq('id', codeId);
+  if (error) { alert('Delete failed: ' + error.message); return; }
+  await reloadData();
+  renderDemoSessions();
+}
 </script>
 
 </body>
