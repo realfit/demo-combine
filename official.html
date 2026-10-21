@@ -6,7 +6,13 @@
   <title>Official App · REALFIT Demo Combine</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
-  <script src="supabase-client.js"></script>
+  <script>
+  const SUPABASE_URL  = 'https://oldsraltxmkghplaqabl.supabase.co';
+  const SUPABASE_ANON = 'sb_publishable_LHsiVA3k1IK3nvhcQNKnEg_QKPhrGr8';
+  const EVENT_ID = (() => { const p = new URLSearchParams(window.location.search); return p.get('event') || 'demo'; })();
+  let _sb = null;
+  function getSB() { if (!_sb) _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON); return _sb; }
+  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
   <style>
     body { background: var(--gray-light); }
