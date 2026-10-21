@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register · REALFIT Demo Combine</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-logo"><a href="index.html">Score<span>My</span>Combine</a></div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="scoreboard.html">Scoreboard</a></li>
+    <li><a href="register.html" class="nav-cta active">Register</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section class="hero" style="padding:56px 24px 48px;">
+  <div class="hero-eyebrow">REALFIT Demo Combine</div>
+  <h1 style="font-size:clamp(2rem,5vw,3.2rem);">Athlete <span>Registration</span></h1>
+  <p class="hero-sub" style="margin-bottom:0;">Complete this form to receive your athlete ID and QR code for combine day.</p>
+</section>
+
+<!-- Form -->
+<section class="section section-gray">
+  <div class="form-wrap">
+
+    <div style="margin-bottom:28px;">
+      <div style="font-family:var(--display);font-size:1.1rem;font-weight:800;color:var(--brand);margin-bottom:4px;">Athlete Information</div>
+      <div style="font-size:0.82rem;color:var(--gray);">All fields required. Your information is used only for event administration.</div>
+    </div>
+
+    <form id="registerForm" onsubmit="handleRegister(event)">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firstName">First Name</label>
+          <input type="text" id="firstName" name="firstName" placeholder="Alex" required autocomplete="given-name">
+        </div>
+        <div class="form-group">
+          <label for="lastName">Last Name</label>
+          <input type="text" id="lastName" name="lastName" placeholder="Johnson" required autocomplete="family-name">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="alex@example.com" required autocomplete="email">
+        <div class="form-hint">Your confirmation and QR code will be sent here.</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dob">Date of Birth</label>
+          <input type="date" id="dob" name="dob" required>
+        </div>
+        <div class="form-group">
+          <label for="gender">Gender</label>
+          <select id="gender" name="gender" required>
+            <option value="" disabled selected>Select…</option>
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+            <option value="NB">Non-binary</option>
+            <option value="prefer-not">Prefer not to say</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-divider"></div>
+
+      <div style="margin-bottom:20px;">
+        <div style="font-family:var(--display);font-size:1.1rem;font-weight:800;color:var(--brand);margin-bottom:4px;">Events</div>
+        <div style="font-size:0.82rem;color:var(--gray);">Select the events you plan to compete in. You can enter all three.</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
+        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--gray-mid);border-radius:8px;transition:border-color 0.2s;" id="evt-pullup">
+          <input type="checkbox" name="events" value="pullup" onchange="highlightEvent(this)" style="width:18px;height:18px;accent-color:var(--accent);">
+          <div>
+            <div style="font-weight:700;color:var(--brand);font-size:0.95rem;">💪 Pull-Ups</div>
+            <div style="font-size:0.78rem;color:var(--gray);">Max reps · dead hang · overhand grip</div>
+          </div>
+          <div style="margin-left:auto;font-family:var(--display);font-size:0.78rem;font-weight:700;color:var(--accent);">33%</div>
+        </label>
+        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--gray-mid);border-radius:8px;transition:border-color 0.2s;" id="evt-dash">
+          <input type="checkbox" name="events" value="dash" onchange="highlightEvent(this)" style="width:18px;height:18px;accent-color:var(--accent);">
+          <div>
+            <div style="font-weight:700;color:var(--brand);font-size:0.95rem;">⚡ 40-Yard Dash</div>
+            <div style="font-size:0.78rem;color:var(--gray);">Best of 2 · standing start · hand timed</div>
+          </div>
+          <div style="margin-left:auto;font-family:var(--display);font-size:0.78rem;font-weight:700;color:var(--accent);">33%</div>
+        </label>
+        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--gray-mid);border-radius:8px;transition:border-color 0.2s;" id="evt-jump">
+          <input type="checkbox" name="events" value="jump" onchange="highlightEvent(this)" style="width:18px;height:18px;accent-color:var(--accent);">
+          <div>
+            <div style="font-weight:700;color:var(--brand);font-size:0.95rem;">🦵 Broad Jump</div>
+            <div style="font-size:0.78rem;color:var(--gray);">Best of 2 · two-foot takeoff · measured in inches</div>
+          </div>
+          <div style="margin-left:auto;font-family:var(--display);font-size:0.78rem;font-weight:700;color:var(--accent);">34%</div>
+        </label>
+      </div>
+
+      <div class="form-divider"></div>
+
+      <!-- Waiver acknowledgment -->
+      <div style="margin-bottom:24px;">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="waiver" name="waiver" required style="width:16px;height:16px;margin-top:3px;accent-color:var(--accent);flex-shrink:0;">
+          <span style="font-size:0.82rem;color:var(--gray);line-height:1.5;">I confirm I am in good health and physically capable of participating. I understand this is a demonstration event and results are for informational purposes only.</span>
+        </label>
+      </div>
+
+      <button type="submit" class="form-submit">Complete Registration →</button>
+
+    </form>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">Score<span>My</span>Combine</div>
+  <p>A <a href="https://realfit.com">REALFIT</a> platform · Powered by <a href="https://fitdat.com">FITDAT</a></p>
+</footer>
+
+<script>
+function highlightEvent(checkbox) {
+  const label = checkbox.closest('label');
+  if (checkbox.checked) {
+    label.style.borderColor = 'var(--accent)';
+    label.style.background = '#eff6ff';
+  } else {
+    label.style.borderColor = 'var(--gray-mid)';
+    label.style.background = '';
+  }
+}
+
+function handleRegister(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = {
+    firstName: form.firstName.value.trim(),
+    lastName: form.lastName.value.trim(),
+    email: form.email.value.trim(),
+    dob: form.dob.value,
+    gender: form.gender.value,
+    events: [...form.querySelectorAll('[name="events"]:checked')].map(c => c.value),
+    registeredAt: new Date().toISOString()
+  };
+
+  if (data.events.length === 0) {
+    alert('Please select at least one event.');
+    return;
+  }
+
+  // Generate athlete ID: DC26-NNNN
+  const year = new Date().getFullYear().toString().slice(-2);
+  const num = String(Math.floor(1000 + Math.random() * 9000));
+  const athleteId = `DC${year}-${num}`;
+  data.athleteId = athleteId;
+
+  // Persist to sessionStorage for confirm page
+  try { sessionStorage.setItem('dc_registration', JSON.stringify(data)); } catch(err) {}
+
+  // Redirect to confirm
+  window.location.href = `confirm.html?id=${athleteId}`;
+}
+</script>
+
+</body>
+</html>

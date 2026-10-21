@@ -1,0 +1,249 @@
+{
+  "_meta": {
+    "description": "FITDAT protocol documents for the REALFIT Demo Combine — a three-event weighted composite combine using published FITDAT tests. Designed as a platform reference implementation and showcase for the REALFIT ecosystem.",
+    "scoreSetId": "scoreset_demo_combine_v1",
+    "version": "1.0.0",
+    "publishingAuthority": "REALFIT",
+    "createdAt": "2026-10-20T00:00:00Z"
+  },
+
+  "protocols": [
+    {
+      "protocolId": "proto_demo_pullup_max_v1",
+      "testRef": "test_pullup_max",
+      "version": "1.0.0",
+      "description": "Dead-hang pull-ups to max reps. Palms facing away (overhand grip). Full extension at bottom, chin clears bar at top. No kipping or momentum. One attempt.",
+      "startCondition": "Athlete hangs at full arm extension, palms pronated, feet off ground.",
+      "equipmentRequired": [
+        "Pull-up bar (fixed or free-standing)",
+        "Judge or certified official"
+      ],
+      "equipmentProfile": "basic",
+      "timingMethod": "n/a",
+      "measurementStandard": "Count of complete reps. Rep is invalid if chin does not clear bar or arms are not fully extended at bottom.",
+      "invalidationRules": [
+        "Kipping or swinging momentum used",
+        "Feet touch ground between reps",
+        "Chin does not clear bar at top",
+        "Arms not fully extended at bottom"
+      ],
+      "status": "active"
+    },
+    {
+      "protocolId": "proto_demo_40yd_dash_v1",
+      "testRef": "test_40yd_dash",
+      "version": "1.0.0",
+      "description": "Standing-start 40-yard dash on flat surface. Athlete initiates on own movement. Hand timing. Best of two attempts.",
+      "startCondition": "Standing start. Athlete self-initiates. Timer starts on first movement.",
+      "equipmentRequired": [
+        "Stopwatch",
+        "Flat surface (turf or track)",
+        "Measured 40-yard distance",
+        "Judge or certified official"
+      ],
+      "equipmentProfile": "basic",
+      "timingMethod": "hand",
+      "measurementStandard": "Nearest 0.01 seconds. Best of two attempts recorded.",
+      "invalidationRules": [
+        "Distance not measured or verified",
+        "Surface is uneven or wet"
+      ],
+      "status": "active"
+    },
+    {
+      "protocolId": "proto_demo_broad_jump_v1",
+      "testRef": "test_standing_long_jump",
+      "version": "1.0.0",
+      "description": "Standing broad jump (standing long jump) from two-foot takeoff. Best of two attempts. Measured from takeoff line to nearest heel contact.",
+      "startCondition": "Athlete stands behind takeoff line, feet shoulder-width apart. May use arm swing. Two-foot takeoff required.",
+      "equipmentRequired": [
+        "Measuring tape",
+        "Flat non-slip surface",
+        "Clearly marked takeoff line",
+        "Judge or certified official"
+      ],
+      "equipmentProfile": "basic",
+      "timingMethod": "n/a",
+      "measurementStandard": "Nearest 0.5 inch (or 1 cm). Measured from takeoff line to back of nearest heel at landing. Best of two attempts recorded.",
+      "invalidationRules": [
+        "One-foot takeoff",
+        "Athlete steps back from takeoff line before jumping",
+        "Athlete falls backward at landing — measurement taken at nearest point of body contact"
+      ],
+      "status": "active"
+    }
+  ],
+
+  "standardSets": [
+    {
+      "standardSetId": "std_pullup_demo_combine",
+      "testRef": "test_pullup_max",
+      "protocolRef": "proto_demo_pullup_max_v1",
+      "populationRef": "pop_neutral",
+      "version": "1.0.0",
+      "name": "Pull-Up Max Reps — REALFIT Demo Combine",
+      "publishingAuthority": "REALFIT",
+      "distributionType": "anchor_points",
+      "scoringDirection": "higher",
+      "anchorPoints": [
+        { "rawValue": 0,  "scaledScore": 0,   "label": "Near Minimum" },
+        { "rawValue": 2,  "scaledScore": 100,  "label": "Well Below Average" },
+        { "rawValue": 5,  "scaledScore": 250,  "label": "Below Average" },
+        { "rawValue": 8,  "scaledScore": 400,  "label": "Average" },
+        { "rawValue": 12, "scaledScore": 550,  "label": "Above Average" },
+        { "rawValue": 16, "scaledScore": 700,  "label": "Well Above Average" },
+        { "rawValue": 20, "scaledScore": 820,  "label": "Near Elite" },
+        { "rawValue": 25, "scaledScore": 920,  "label": "Elite" },
+        { "rawValue": 30, "scaledScore": 1000, "label": "Near Maximum" }
+      ],
+      "referenceBands": [
+        { "label": "Near Minimum",      "min": 0,  "max": 1  },
+        { "label": "Well Below Average","min": 2,  "max": 4  },
+        { "label": "Below Average",     "min": 5,  "max": 7  },
+        { "label": "Average",           "min": 8,  "max": 11 },
+        { "label": "Above Average",     "min": 12, "max": 15 },
+        { "label": "Well Above Average","min": 16, "max": 19 },
+        { "label": "Near Elite",        "min": 20, "max": 24 },
+        { "label": "Elite",             "min": 25, "max": 29 },
+        { "label": "Near Maximum",      "min": 30, "max": null }
+      ],
+      "notes": "Anchored on general adult male population. Pop-neutral bands are intentionally broad to accommodate the full age spectrum of REALFIT users.",
+      "status": "active"
+    },
+    {
+      "standardSetId": "std_40yd_dash_demo_combine",
+      "testRef": "test_40yd_dash",
+      "protocolRef": "proto_demo_40yd_dash_v1",
+      "populationRef": "pop_neutral",
+      "version": "1.0.0",
+      "name": "40-Yard Dash — REALFIT Demo Combine",
+      "publishingAuthority": "REALFIT",
+      "distributionType": "anchor_points",
+      "scoringDirection": "lower",
+      "anchorPoints": [
+        { "rawValue": 7.50, "scaledScore": 0,   "label": "Near Minimum" },
+        { "rawValue": 6.50, "scaledScore": 100,  "label": "Well Below Average" },
+        { "rawValue": 5.80, "scaledScore": 250,  "label": "Below Average" },
+        { "rawValue": 5.20, "scaledScore": 400,  "label": "Average" },
+        { "rawValue": 4.90, "scaledScore": 550,  "label": "Above Average" },
+        { "rawValue": 4.65, "scaledScore": 700,  "label": "Well Above Average" },
+        { "rawValue": 4.45, "scaledScore": 820,  "label": "Near Elite" },
+        { "rawValue": 4.30, "scaledScore": 920,  "label": "Elite" },
+        { "rawValue": 4.20, "scaledScore": 1000, "label": "Near Maximum" }
+      ],
+      "referenceBands": [
+        { "label": "Near Minimum",      "min": null, "max": 7.49 },
+        { "label": "Well Below Average","min": 6.51, "max": 7.49 },
+        { "label": "Below Average",     "min": 5.81, "max": 6.50 },
+        { "label": "Average",           "min": 5.21, "max": 5.80 },
+        { "label": "Above Average",     "min": 4.91, "max": 5.20 },
+        { "label": "Well Above Average","min": 4.66, "max": 4.90 },
+        { "label": "Near Elite",        "min": 4.46, "max": 4.65 },
+        { "label": "Elite",             "min": 4.31, "max": 4.45 },
+        { "label": "Near Maximum",      "min": null, "max": 4.30 }
+      ],
+      "notes": "Pop-neutral anchor points calibrated across general adult population. A 5.20s run is solidly average for a recreational adult; sub-4.50 is genuinely elite regardless of age.",
+      "status": "active"
+    },
+    {
+      "standardSetId": "std_broad_jump_demo_combine",
+      "testRef": "test_standing_long_jump",
+      "protocolRef": "proto_demo_broad_jump_v1",
+      "populationRef": "pop_neutral",
+      "version": "1.0.0",
+      "name": "Broad Jump — REALFIT Demo Combine",
+      "publishingAuthority": "REALFIT",
+      "distributionType": "anchor_points",
+      "scoringDirection": "higher",
+      "canonicalUnit": "inches",
+      "anchorPoints": [
+        { "rawValue": 48,  "scaledScore": 0,   "label": "Near Minimum" },
+        { "rawValue": 60,  "scaledScore": 100,  "label": "Well Below Average" },
+        { "rawValue": 72,  "scaledScore": 250,  "label": "Below Average" },
+        { "rawValue": 84,  "scaledScore": 400,  "label": "Average" },
+        { "rawValue": 96,  "scaledScore": 550,  "label": "Above Average" },
+        { "rawValue": 108, "scaledScore": 700,  "label": "Well Above Average" },
+        { "rawValue": 114, "scaledScore": 820,  "label": "Near Elite" },
+        { "rawValue": 120, "scaledScore": 920,  "label": "Elite" },
+        { "rawValue": 126, "scaledScore": 1000, "label": "Near Maximum" }
+      ],
+      "referenceBands": [
+        { "label": "Near Minimum",      "min": null, "max": 59  },
+        { "label": "Well Below Average","min": 60,   "max": 71  },
+        { "label": "Below Average",     "min": 72,   "max": 83  },
+        { "label": "Average",           "min": 84,   "max": 95  },
+        { "label": "Above Average",     "min": 96,   "max": 107 },
+        { "label": "Well Above Average","min": 108,  "max": 113 },
+        { "label": "Near Elite",        "min": 114,  "max": 119 },
+        { "label": "Elite",             "min": 120,  "max": 125 },
+        { "label": "Near Maximum",      "min": 126,  "max": null }
+      ],
+      "notes": "Measured in inches. 84 inches (7 feet) is a solid recreational adult average. 120+ inches (10 feet) is genuinely elite. NFL Combine average broad jump is approximately 114–118 inches for skill positions.",
+      "status": "active"
+    }
+  ],
+
+  "scoreSet": {
+    "scoreSetId": "scoreset_demo_combine_v1",
+    "version": "1.0.0",
+    "name": "REALFIT Demo Combine",
+    "publishingAuthority": "REALFIT",
+    "audience": "General adult athletes participating in the REALFIT Demo Combine event.",
+    "intendedPurpose": "A three-event weighted composite combine designed as a platform reference implementation for the REALFIT ecosystem. Measures upper-body strength endurance (pull-ups), explosive linear speed (40-yard dash), and lower-body power (broad jump). Produces a single composite score on the 0–1000 RFS30-compatible scale, enabling direct comparison with full RFS30 results. Use this Score Set for combine events, platform demonstrations, and introductory athlete assessment.",
+    "archetype": "weighted_composite",
+    "scale": {
+      "min": 0,
+      "max": 1000,
+      "type": "integer"
+    },
+    "populationRef": "pop_neutral",
+    "testsRequired": [
+      {
+        "testRef": "test_pullup_max",
+        "protocolRef": "proto_demo_pullup_max_v1",
+        "standardSetRef": "std_pullup_demo_combine",
+        "componentWeight": 0.33,
+        "displayName": "Pull-Ups",
+        "displayOrder": 1
+      },
+      {
+        "testRef": "test_40yd_dash",
+        "protocolRef": "proto_demo_40yd_dash_v1",
+        "standardSetRef": "std_40yd_dash_demo_combine",
+        "componentWeight": 0.33,
+        "displayName": "40-Yard Dash",
+        "displayOrder": 2
+      },
+      {
+        "testRef": "test_standing_long_jump",
+        "protocolRef": "proto_demo_broad_jump_v1",
+        "standardSetRef": "std_broad_jump_demo_combine",
+        "componentWeight": 0.34,
+        "displayName": "Broad Jump",
+        "displayOrder": 3
+      }
+    ],
+    "compositeFormula": "ROUND( (pullup_scaled * 0.33) + (dash_scaled * 0.33) + (jump_scaled * 0.34) )",
+    "overallBands": [
+      { "label": "Near Minimum",      "min": 0,   "max": 99  },
+      { "label": "Well Below Average","min": 100,  "max": 249 },
+      { "label": "Below Average",     "min": 250,  "max": 399 },
+      { "label": "Average",           "min": 400,  "max": 549 },
+      { "label": "Above Average",     "min": 550,  "max": 699 },
+      { "label": "Well Above Average","min": 700,  "max": 819 },
+      { "label": "Near Elite",        "min": 820,  "max": 919 },
+      { "label": "Elite",             "min": 920,  "max": 999 },
+      { "label": "Near Maximum",      "min": 1000, "max": 1000 }
+    ],
+    "displayConfig": {
+      "showPerTestBands": true,
+      "showCompositeScore": true,
+      "showCompositeband": true,
+      "scoreName": "Demo Combine Score",
+      "scoreAbbreviation": "DCS"
+    },
+    "status": "active",
+    "createdAt": "2026-10-20T00:00:00Z",
+    "updatedAt": "2026-10-20T00:00:00Z"
+  }
+}

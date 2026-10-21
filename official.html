@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Official App · REALFIT Demo Combine</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- QR scanner -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    body { background: var(--gray-light); }
+    .official-header {
+      background: var(--brand);
+      color: var(--white);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .official-header h1 {
+      font-size: 1.3rem;
+      font-weight: 900;
+    }
+    .official-badge {
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      background: var(--accent);
+      color: var(--white);
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+    .scan-box {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .scan-box h2 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .scan-box p { font-size:0.82rem; color:var(--gray); margin-bottom:16px; }
+    #reader { width:100%; max-width:400px; border-radius:8px; overflow:hidden; }
+    .athlete-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .athlete-card.visible { display: block; }
+    .athlete-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--gray-mid);
+    }
+    .athlete-card-id {
+      font-family: var(--display);
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--brand);
+    }
+    .status-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .status-badge.complete { background:#dcfce7; color:#166534; }
+    .status-badge.partial  { background:#fef9c3; color:#854d0e; }
+    .status-badge.pending  { background:var(--gray-mid); color:var(--gray); }
+    .event-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--gray-mid);
+    }
+    .event-row:last-child { border-bottom: none; }
+    .event-icon { font-size: 1.3rem; width: 32px; text-align: center; flex-shrink: 0; }
+    .event-row-name { font-weight: 700; color: var(--brand); font-size: 0.9rem; }
+    .event-row-unit { font-size: 0.75rem; color: var(--gray); }
+    .event-row-result { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .result-recorded {
+      font-family: var(--display);
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--accent);
+    }
+    .edit-btn {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: #eff6ff;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .entry-form {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--gray-mid);
+    }
+    .entry-form.open { display: block; }
+    .manual-id-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .manual-id-row input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1.5px solid var(--gray-mid);
+      border-radius: 8px;
+      font-family: var(--display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--brand);
+      outline: none;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .manual-id-row input:focus { border-color: var(--accent); }
+    .manual-id-row button {
+      padding: 10px 18px;
+      background: var(--accent);
+      color: var(--white);
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 0.9rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #login-screen {
+      position: fixed; inset: 0;
+      background: var(--brand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    .login-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 40px;
+      width: 320px;
+      text-align: center;
+    }
+    .login-card h2 { font-size: 1.4rem; margin-bottom: 6px; }
+    .login-card p { font-size: 0.82rem; color: var(--gray); margin-bottom: 24px; }
+    .login-card input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--gray-mid);
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 14px;
+      outline: none;
+    }
+    .login-card input:focus { border-color: var(--accent); }
+    .login-card button {
+      width: 100%;
+      padding: 13px;
+      background: var(--accent);
+      color: var(--white);
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .login-error { color: #dc2626; font-size: 0.8rem; margin-top: 8px; display: none; }
+  </style>
+</head>
+<body>
+
+<!-- Login gate -->
+<div id="login-screen">
+  <div class="login-card">
+    <div style="font-family:var(--display);font-size:1.4rem;font-weight:900;margin-bottom:4px;">Official Access</div>
+    <p>Enter the event passcode to continue.</p>
+    <input type="password" id="passcode" placeholder="Passcode" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Enter →</button>
+    <div class="login-error" id="login-error">Incorrect passcode. Try again.</div>
+  </div>
+</div>
+
+<!-- Official header -->
+<div class="official-header">
+  <div>
+    <div style="font-size:0.65rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:2px;">ScoreMyCombine</div>
+    <h1>Official Result Entry</h1>
+  </div>
+  <span class="official-badge">Certified Official</span>
+</div>
+
+<!-- Main panel -->
+<div style="padding:20px 16px;max-width:580px;margin:0 auto;">
+
+  <!-- QR Scanner -->
+  <div class="scan-box">
+    <h2>Scan Athlete QR Code</h2>
+    <p>Point the camera at the athlete's QR code to load their profile.</p>
+    <div id="reader"></div>
+    <div style="margin-top:12px;font-size:0.8rem;color:var(--gray);text-align:center;">— or enter ID manually —</div>
+    <div class="manual-id-row" style="margin-top:12px;">
+      <input type="text" id="manualId" placeholder="DC26-0042" maxlength="10">
+      <button onclick="loadAthlete(document.getElementById('manualId').value.toUpperCase())">Load</button>
+    </div>
+  </div>
+
+  <!-- Athlete card (populated on scan/lookup) -->
+  <div class="athlete-card" id="athleteCard">
+    <div class="athlete-card-header">
+      <div>
+        <div class="athlete-card-id" id="cardAthleteId">—</div>
+        <div style="font-weight:700;color:var(--brand);font-size:1rem;" id="cardAthleteName">—</div>
+      </div>
+      <span class="status-badge pending" id="cardStatus">Pending</span>
+    </div>
+
+    <!-- Pull-Ups -->
+    <div class="event-row">
+      <div class="event-icon">💪</div>
+      <div>
+        <div class="event-row-name">Pull-Ups</div>
+        <div class="event-row-unit">Max reps · dead hang</div>
+        <div class="entry-form" id="form-pullup">
+          <div class="result-input-row">
+            <input type="number" id="input-pullup" min="0" max="60" placeholder="0" step="1">
+            <div class="unit-label">reps</div>
+          </div>
+          <button class="btn-certify" onclick="certifyResult('pullup')">✓ Certify Result</button>
+        </div>
+      </div>
+      <div class="event-row-result">
+        <span class="result-recorded" id="result-pullup" style="display:none;"></span>
+        <button class="edit-btn" id="editbtn-pullup" onclick="toggleForm('pullup')" style="display:none;">Edit</button>
+        <button class="edit-btn" id="entrybtn-pullup" onclick="toggleForm('pullup')">Enter</button>
+      </div>
+    </div>
+
+    <!-- 40-Yard Dash -->
+    <div class="event-row">
+      <div class="event-icon">⚡</div>
+      <div>
+        <div class="event-row-name">40-Yard Dash</div>
+        <div class="event-row-unit">Seconds · best of 2</div>
+        <div class="entry-form" id="form-dash">
+          <div class="result-input-row">
+            <input type="number" id="input-dash" min="3.5" max="15" placeholder="0.00" step="0.01">
+            <div class="unit-label">seconds</div>
+          </div>
+          <button class="btn-certify" onclick="certifyResult('dash')">✓ Certify Result</button>
+        </div>
+      </div>
+      <div class="event-row-result">
+        <span class="result-recorded" id="result-dash" style="display:none;"></span>
+        <button class="edit-btn" id="editbtn-dash" onclick="toggleForm('dash')" style="display:none;">Edit</button>
+        <button class="edit-btn" id="entrybtn-dash" onclick="toggleForm('dash')">Enter</button>
+      </div>
+    </div>
+
+    <!-- Broad Jump -->
+    <div class="event-row">
+      <div class="event-icon">🦵</div>
+      <div>
+        <div class="event-row-name">Broad Jump</div>
+        <div class="event-row-unit">Inches · best of 2</div>
+        <div class="entry-form" id="form-jump">
+          <div class="result-input-row">
+            <input type="number" id="input-jump" min="12" max="160" placeholder="0" step="0.5">
+            <div class="unit-label">inches</div>
+          </div>
+          <button class="btn-certify" onclick="certifyResult('jump')">✓ Certify Result</button>
+        </div>
+      </div>
+      <div class="event-row-result">
+        <span class="result-recorded" id="result-jump" style="display:none;"></span>
+        <button class="edit-btn" id="editbtn-jump" onclick="toggleForm('jump')" style="display:none;">Edit</button>
+        <button class="edit-btn" id="entrybtn-jump" onclick="toggleForm('jump')">Enter</button>
+      </div>
+    </div>
+
+    <!-- Composite score (shown when all 3 certified) -->
+    <div id="dcs-result" style="display:none;margin-top:20px;background:var(--brand);border-radius:var(--radius);padding:20px;text-align:center;">
+      <div style="font-size:0.68rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:4px;">Demo Combine Score</div>
+      <div style="font-family:var(--display);font-size:3rem;font-weight:900;color:var(--accent-light);" id="dcs-value">—</div>
+      <div style="font-size:0.85rem;color:rgba(255,255,255,0.6);" id="dcs-band">—</div>
+    </div>
+
+  </div>
+
+  <!-- Recent certifications log -->
+  <div class="scan-box" style="margin-top:20px;">
+    <h2 style="margin-bottom:12px;">Recent Certifications</h2>
+    <div id="cert-log" style="font-size:0.82rem;color:var(--gray);">No certifications yet this session.</div>
+  </div>
+
+</div>
+
+<script>
+// ── Auth ──
+const PASSCODE = 'realfit2026'; // placeholder — replace with env var in production
+
+function doLogin() {
+  const val = document.getElementById('passcode').value;
+  if (val === PASSCODE) {
+    document.getElementById('login-screen').style.display = 'none';
+    initScanner();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+// ── Scoring (same engine as scoreboard.html) ──
+const ANCHORS = {
+  pullup: [{raw:0,score:0},{raw:2,score:100},{raw:5,score:250},{raw:8,score:400},{raw:12,score:550},{raw:16,score:700},{raw:20,score:820},{raw:25,score:920},{raw:30,score:1000}],
+  dash:   [{raw:7.50,score:0},{raw:6.50,score:100},{raw:5.80,score:250},{raw:5.20,score:400},{raw:4.90,score:550},{raw:4.65,score:700},{raw:4.45,score:820},{raw:4.30,score:920},{raw:4.20,score:1000}],
+  jump:   [{raw:48,score:0},{raw:60,score:100},{raw:72,score:250},{raw:84,score:400},{raw:96,score:550},{raw:108,score:700},{raw:114,score:820},{raw:120,score:920},{raw:126,score:1000}]
+};
+const BANDS = [{label:'Near Minimum',min:0,max:99},{label:'Well Below Average',min:100,max:249},{label:'Below Average',min:250,max:399},{label:'Average',min:400,max:549},{label:'Above Average',min:550,max:699},{label:'Well Above Average',min:700,max:819},{label:'Near Elite',min:820,max:919},{label:'Elite',min:920,max:999},{label:'Near Maximum',min:1000,max:1000}];
+
+function scoreEventDirect(event, raw) {
+  if (raw == null) return null;
+  const anchors = ANCHORS[event];
+  if (event === 'dash') {
+    if (raw <= anchors[anchors.length-1].raw) return 1000;
+    if (raw >= anchors[0].raw) return 0;
+    for (let i = 0; i < anchors.length - 1; i++) {
+      const a = anchors[i], b = anchors[i+1];
+      if (raw <= a.raw && raw >= b.raw) {
+        const t = (a.raw - raw) / (a.raw - b.raw);
+        return Math.round(a.score + t * (b.score - a.score));
+      }
+    }
+    return 0;
+  }
+  if (raw <= anchors[0].raw) return anchors[0].score;
+  if (raw >= anchors[anchors.length-1].raw) return anchors[anchors.length-1].score;
+  for (let i = 0; i < anchors.length - 1; i++) {
+    const a = anchors[i], b = anchors[i+1];
+    if (raw >= a.raw && raw <= b.raw) {
+      const t = (raw - a.raw) / (b.raw - a.raw);
+      return Math.round(a.score + t * (b.score - a.score));
+    }
+  }
+  return 0;
+}
+function getBandLabel(score) {
+  return (BANDS.find(b => score >= b.min && score <= b.max) || BANDS[0]).label;
+}
+
+// ── State ──
+let currentAthlete = null;
+const results = {}; // { pullup: raw, dash: raw, jump: raw }
+
+// ── QR Scanner ──
+function initScanner() {
+  const html5QrCode = new Html5Qrcode('reader');
+  html5QrCode.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    (decodedText) => {
+      // Extract athlete ID from URL or raw text
+      const match = decodedText.match(/DC\d{2}-\d{4}/i);
+      if (match) {
+        html5QrCode.stop().catch(() => {});
+        loadAthlete(match[0].toUpperCase());
+      }
+    },
+    () => {} // ignore scan errors
+  ).catch(() => {
+    // Camera unavailable — silent fail, manual entry still works
+    document.getElementById('reader').innerHTML = '<div style="padding:16px;font-size:0.82rem;color:var(--gray);text-align:center;">Camera unavailable. Use manual ID entry below.</div>';
+  });
+}
+
+// ── Load athlete ──
+function loadAthlete(id) {
+  if (!id || !id.match(/^DC\d{2}-\d{4}$/i)) {
+    alert('Invalid athlete ID format. Example: DC26-0042');
+    return;
+  }
+  currentAthlete = id.toUpperCase();
+  Object.keys(results).forEach(k => delete results[k]);
+
+  document.getElementById('cardAthleteId').textContent = currentAthlete;
+  // In production: fetch name from Supabase. For demo, generate a placeholder.
+  document.getElementById('cardAthleteName').textContent = 'Athlete ' + currentAthlete;
+  document.getElementById('cardStatus').textContent = 'Pending';
+  document.getElementById('cardStatus').className = 'status-badge pending';
+  document.getElementById('athleteCard').classList.add('visible');
+  document.getElementById('dcs-result').style.display = 'none';
+
+  // Reset event rows
+  ['pullup','dash','jump'].forEach(evt => {
+    document.getElementById(`result-${evt}`).style.display = 'none';
+    document.getElementById(`editbtn-${evt}`).style.display = 'none';
+    document.getElementById(`entrybtn-${evt}`).style.display = '';
+    document.getElementById(`form-${evt}`).classList.remove('open');
+    document.getElementById(`input-${evt}`).value = '';
+  });
+
+  // Scroll to card
+  document.getElementById('athleteCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+function toggleForm(evt) {
+  document.getElementById(`form-${evt}`).classList.toggle('open');
+}
+
+function certifyResult(evt) {
+  const input = document.getElementById(`input-${evt}`);
+  const raw = parseFloat(input.value);
+  if (isNaN(raw) || raw <= 0) { alert('Enter a valid result.'); return; }
+
+  results[evt] = raw;
+
+  // Update UI
+  const label = evt === 'pullup' ? `${raw} reps` : evt === 'dash' ? `${raw}s` : `${raw}"`;
+  document.getElementById(`result-${evt}`).textContent = label;
+  document.getElementById(`result-${evt}`).style.display = '';
+  document.getElementById(`editbtn-${evt}`).style.display = '';
+  document.getElementById(`entrybtn-${evt}`).style.display = 'none';
+  document.getElementById(`form-${evt}`).classList.remove('open');
+
+  // Log it
+  addToLog(currentAthlete, evt, raw);
+
+  // Check if all 3 done
+  if (results.pullup != null && results.dash != null && results.jump != null) {
+    const ps = scoreEventDirect('pullup', results.pullup);
+    const ds = scoreEventDirect('dash', results.dash);
+    const js = scoreEventDirect('jump', results.jump);
+    const dcs = Math.round(ps * 0.33 + ds * 0.33 + js * 0.34);
+    document.getElementById('dcs-value').textContent = dcs;
+    document.getElementById('dcs-band').textContent = getBandLabel(dcs);
+    document.getElementById('dcs-result').style.display = '';
+    document.getElementById('cardStatus').textContent = 'Complete';
+    document.getElementById('cardStatus').className = 'status-badge complete';
+  } else {
+    document.getElementById('cardStatus').textContent = 'In Progress';
+    document.getElementById('cardStatus').className = 'status-badge partial';
+  }
+}
+
+function addToLog(athleteId, evt, raw) {
+  const log = document.getElementById('cert-log');
+  if (log.textContent.includes('No certifications')) log.innerHTML = '';
+  const evtName = {pullup:'Pull-Ups',dash:'40-Yd Dash',jump:'Broad Jump'}[evt];
+  const label = evt === 'pullup' ? `${raw} reps` : evt === 'dash' ? `${raw}s` : `${raw}"`;
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-mid);';
+  row.innerHTML = `<span><strong style="color:var(--brand);">${athleteId}</strong> · ${evtName}</span><span style="color:var(--accent);font-weight:700;">${label} <span style="color:var(--gray);font-weight:400;">${time}</span></span>`;
+  log.prepend(row);
+}
+</script>
+
+</body>
+</html>

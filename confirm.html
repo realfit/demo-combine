@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmed · REALFIT Demo Combine</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- QR code library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-logo"><a href="index.html">Score<span>My</span>Combine</a></div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="scoreboard.html">Scoreboard</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section class="hero" style="padding:56px 24px 48px;">
+  <div class="hero-eyebrow" style="color:#4ade80;">✓ Registration Confirmed</div>
+  <h1 style="font-size:clamp(2rem,5vw,3.2rem);">You're <span>In.</span></h1>
+  <p class="hero-sub" style="margin-bottom:0;">Save your athlete ID and QR code. You'll need it on combine day.</p>
+</section>
+
+<!-- Confirm card -->
+<section class="section section-gray">
+  <div class="confirm-card">
+
+    <div id="athleteName" style="font-family:var(--display);font-size:1.6rem;font-weight:900;color:var(--brand);margin-bottom:4px;">—</div>
+    <div id="athleteEvents" style="font-size:0.82rem;color:var(--gray);margin-bottom:24px;">—</div>
+
+    <!-- QR code -->
+    <div style="background:var(--white);border:2px solid var(--gray-mid);border-radius:12px;padding:20px;display:inline-block;margin-bottom:16px;">
+      <div id="qrcode"></div>
+    </div>
+
+    <div class="athlete-id" id="athleteIdDisplay">—</div>
+    <div class="athlete-id-label">Athlete ID · Demo Combine 2026</div>
+
+    <!-- Event checklist -->
+    <div id="eventList" style="text-align:left;background:var(--gray-light);border-radius:8px;padding:16px;margin-bottom:24px;"></div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+      <button onclick="window.print()" class="btn-primary" style="font-size:0.9rem;padding:12px 24px;">
+        🖨 Print / Save
+      </button>
+      <a href="scoreboard.html" class="btn-secondary" style="font-size:0.9rem;padding:11px 24px;">
+        View Scoreboard
+      </a>
+    </div>
+
+    <div style="margin-top:24px;font-size:0.78rem;color:var(--gray);line-height:1.6;">
+      A confirmation with this QR code has been sent to your email address.
+    </div>
+
+  </div>
+</section>
+
+<!-- What to expect -->
+<section class="section">
+  <div class="container" style="max-width:680px;">
+    <div class="section-label">What to expect</div>
+    <h2 style="margin-bottom:24px;">Combine day checklist</h2>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        <div style="width:36px;height:36px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--white);font-family:var(--display);font-weight:900;font-size:1rem;flex-shrink:0;">1</div>
+        <div>
+          <div style="font-weight:700;color:var(--brand);margin-bottom:2px;">Show your QR code at check-in</div>
+          <div style="font-size:0.85rem;color:var(--gray);">An official will scan your code to pull up your athlete profile instantly.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        <div style="width:36px;height:36px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--white);font-family:var(--display);font-weight:900;font-size:1rem;flex-shrink:0;">2</div>
+        <div>
+          <div style="font-weight:700;color:var(--brand);margin-bottom:2px;">Complete your events</div>
+          <div style="font-size:0.85rem;color:var(--gray);">A certified official records your result for each event. Results appear on the scoreboard in real time.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        <div style="width:36px;height:36px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--white);font-family:var(--display);font-weight:900;font-size:1rem;flex-shrink:0;">3</div>
+        <div>
+          <div style="font-weight:700;color:var(--brand);margin-bottom:2px;">Get your Demo Combine Score</div>
+          <div style="font-size:0.85rem;color:var(--gray);">Once all three events are entered, your DCS composite score is calculated and displayed on the scoreboard.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">Score<span>My</span>Combine</div>
+  <p>A <a href="https://realfit.com">REALFIT</a> platform · Powered by <a href="https://fitdat.com">FITDAT</a></p>
+</footer>
+
+<script>
+const EVENT_LABELS = {
+  pullup: '💪 Pull-Ups',
+  dash:   '⚡ 40-Yard Dash',
+  jump:   '🦵 Broad Jump'
+};
+
+function getParam(key) {
+  return new URLSearchParams(window.location.search).get(key);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const athleteId = getParam('id') || 'DC26-0000';
+  let reg = null;
+  try { reg = JSON.parse(sessionStorage.getItem('dc_registration')); } catch(e) {}
+
+  // Athlete ID display
+  document.getElementById('athleteIdDisplay').textContent = athleteId;
+
+  // Name
+  if (reg) {
+    document.getElementById('athleteName').textContent = `${reg.firstName} ${reg.lastName}`;
+    const evtNames = (reg.events || []).map(e => EVENT_LABELS[e] || e).join(' · ');
+    document.getElementById('athleteEvents').textContent = evtNames || 'All events';
+
+    // Event list
+    const listEl = document.getElementById('eventList');
+    (reg.events || []).forEach(evt => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-mid);font-size:0.88rem;';
+      row.innerHTML = `<span style="color:var(--accent);font-size:1rem;">✓</span><span style="font-weight:600;color:var(--brand);">${EVENT_LABELS[evt] || evt}</span>`;
+      listEl.appendChild(row);
+    });
+    listEl.lastChild && (listEl.lastChild.style.borderBottom = 'none');
+  }
+
+  // QR code — encodes the athlete ID + event URL
+  const qrData = `https://demo.scoremycombine.com/athlete?id=${athleteId}`;
+  new QRCode(document.getElementById('qrcode'), {
+    text: qrData,
+    width: 180,
+    height: 180,
+    colorDark: '#0d0d0d',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+});
+</script>
+
+</body>
+</html>

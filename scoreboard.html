@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scoreboard · REALFIT Demo Combine</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      background: var(--gray-light);
+      padding: 6px;
+      border-radius: 10px;
+      margin-bottom: 28px;
+      width: fit-content;
+    }
+    .tab-btn {
+      padding: 8px 18px;
+      border: none;
+      background: transparent;
+      border-radius: 7px;
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--gray);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tab-btn.active {
+      background: var(--white);
+      color: var(--brand);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .challenge-panel { display: none; }
+    .challenge-panel.active { display: block; }
+    .event-badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      background: var(--accent);
+      color: var(--white);
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+    }
+    .sub-score {
+      font-size: 0.78rem;
+      color: var(--gray);
+    }
+    .sub-score strong { color: var(--brand); }
+  </style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-logo"><a href="index.html">Score<span>My</span>Combine</a></div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="scoreboard.html" class="active">Scoreboard</a></li>
+    <li><a href="register.html" class="nav-cta">Register</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section class="hero" style="padding:48px 24px 40px;">
+  <div class="hero-eyebrow">REALFIT Demo Combine</div>
+  <h1 style="font-size:clamp(2rem,5vw,3.2rem);">Live <span>Scoreboard</span></h1>
+  <p class="hero-sub" style="margin-bottom:0;">Results update in real time as events are certified by officials.</p>
+</section>
+
+<!-- Scoreboard -->
+<section class="section section-gray" style="padding-top:40px;">
+  <div class="container">
+
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('overall', this)">🏆 Overall DCS</button>
+      <button class="tab-btn" onclick="switchTab('pullup', this)">💪 Pull-Ups</button>
+      <button class="tab-btn" onclick="switchTab('dash', this)">⚡ 40-Yard Dash</button>
+      <button class="tab-btn" onclick="switchTab('jump', this)">🦵 Broad Jump</button>
+    </div>
+
+    <!-- Overall DCS panel -->
+    <div class="challenge-panel active" id="panel-overall">
+      <div style="margin-bottom:16px;">
+        <div class="event-badge">Demo Combine Score · DCS</div>
+        <p style="font-size:0.85rem;color:var(--gray);">Composite score (0–1000). Requires all three events. Weighted 33% / 33% / 34%.</p>
+      </div>
+      <div class="scoreboard-wrap">
+        <table class="scoreboard-table" id="table-overall">
+          <thead>
+            <tr>
+              <th style="width:48px;">#</th>
+              <th>Athlete</th>
+              <th>Pull-Ups</th>
+              <th>40-Yd Dash</th>
+              <th>Broad Jump</th>
+              <th>DCS</th>
+              <th>Band</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-overall"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pull-Ups panel -->
+    <div class="challenge-panel" id="panel-pullup">
+      <div style="margin-bottom:16px;">
+        <div class="event-badge">Pull-Ups</div>
+        <p style="font-size:0.85rem;color:var(--gray);">Max reps · dead hang · overhand grip. Scored 0–1000.</p>
+      </div>
+      <div class="scoreboard-wrap">
+        <table class="scoreboard-table">
+          <thead>
+            <tr>
+              <th style="width:48px;">#</th>
+              <th>Athlete</th>
+              <th>Reps</th>
+              <th>Score</th>
+              <th>Band</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-pullup"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 40-Yard Dash panel -->
+    <div class="challenge-panel" id="panel-dash">
+      <div style="margin-bottom:16px;">
+        <div class="event-badge">40-Yard Dash</div>
+        <p style="font-size:0.85rem;color:var(--gray);">Best of 2 attempts · hand timed · lower is better. Scored 0–1000.</p>
+      </div>
+      <div class="scoreboard-wrap">
+        <table class="scoreboard-table">
+          <thead>
+            <tr>
+              <th style="width:48px;">#</th>
+              <th>Athlete</th>
+              <th>Time</th>
+              <th>Score</th>
+              <th>Band</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-dash"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Broad Jump panel -->
+    <div class="challenge-panel" id="panel-jump">
+      <div style="margin-bottom:16px;">
+        <div class="event-badge">Broad Jump</div>
+        <p style="font-size:0.85rem;color:var(--gray);">Best of 2 attempts · two-foot takeoff · measured in inches. Scored 0–1000.</p>
+      </div>
+      <div class="scoreboard-wrap">
+        <table class="scoreboard-table">
+          <thead>
+            <tr>
+              <th style="width:48px;">#</th>
+              <th>Athlete</th>
+              <th>Distance</th>
+              <th>Score</th>
+              <th>Band</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-jump"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Empty state (shown when no real data yet) -->
+    <div id="empty-state" style="display:none;text-align:center;padding:48px 24px;">
+      <div style="font-size:2.5rem;margin-bottom:12px;">🏁</div>
+      <div style="font-family:var(--display);font-size:1.4rem;font-weight:800;color:var(--brand);margin-bottom:8px;">No results yet</div>
+      <div style="font-size:0.9rem;color:var(--gray);">Results appear here as officials certify them on combine day.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">Score<span>My</span>Combine</div>
+  <p>A <a href="https://realfit.com">REALFIT</a> platform · Powered by <a href="https://fitdat.com">FITDAT</a></p>
+</footer>
+
+<script>
+// ── Scoring engine (mirrors FITDAT anchor_points interpolation) ──
+const ANCHORS = {
+  pullup: [
+    {raw:0,  score:0},   {raw:2,  score:100},  {raw:5,  score:250},
+    {raw:8,  score:400}, {raw:12, score:550},  {raw:16, score:700},
+    {raw:20, score:820}, {raw:25, score:920},  {raw:30, score:1000}
+  ],
+  dash: [  // lower is better — raw values descend
+    {raw:7.50, score:0},   {raw:6.50, score:100},  {raw:5.80, score:250},
+    {raw:5.20, score:400}, {raw:4.90, score:550},  {raw:4.65, score:700},
+    {raw:4.45, score:820}, {raw:4.30, score:920},  {raw:4.20, score:1000}
+  ],
+  jump: [
+    {raw:48,  score:0},   {raw:60,  score:100},  {raw:72,  score:250},
+    {raw:84,  score:400}, {raw:96,  score:550},  {raw:108, score:700},
+    {raw:114, score:820}, {raw:120, score:920},  {raw:126, score:1000}
+  ]
+};
+
+const BANDS = [
+  {label:'Near Minimum',      min:0,    max:99,   cls:''},
+  {label:'Well Below Average',min:100,  max:249,  cls:'below'},
+  {label:'Below Average',     min:250,  max:399,  cls:'below'},
+  {label:'Average',           min:400,  max:549,  cls:'average'},
+  {label:'Above Average',     min:550,  max:699,  cls:'above'},
+  {label:'Well Above Average',min:700,  max:819,  cls:'above'},
+  {label:'Near Elite',        min:820,  max:919,  cls:'elite'},
+  {label:'Elite',             min:920,  max:999,  cls:'elite'},
+  {label:'Near Maximum',      min:1000, max:1000, cls:'elite'}
+];
+
+function interpolate(anchors, raw, lowerBetter) {
+  const pts = [...anchors];
+  if (lowerBetter) pts.reverse(); // ascending raw order
+  if (raw <= pts[0].raw) return lowerBetter ? 1000 : 0;
+  if (raw >= pts[pts.length-1].raw) return lowerBetter ? 0 : 1000;
+  for (let i = 0; i < pts.length - 1; i++) {
+    if (raw >= pts[i].raw && raw <= pts[i+1].raw) {
+      const t = (raw - pts[i].raw) / (pts[i+1].raw - pts[i].raw);
+      return Math.round(pts[i].score + t * (pts[i+1].score - pts[i].score));
+    }
+  }
+  return 0;
+}
+
+function scoreEvent(event, raw) {
+  if (raw == null) return null;
+  const anchors = ANCHORS[event];
+  const lowerBetter = event === 'dash';
+  // For lower-better, flip so we interpolate correctly
+  if (lowerBetter) {
+    // anchors are in descending raw order already; flip for interpolation
+    const flipped = [...anchors].reverse();
+    return interpolate(flipped, raw, false); // treat as higher-better after flip
+  }
+  return interpolate(anchors, raw, false);
+}
+
+// Simpler direct lookup for lower-is-better
+function scoreEventDirect(event, raw) {
+  if (raw == null) return null;
+  const anchors = ANCHORS[event];
+  if (event === 'dash') {
+    // lower raw = higher score
+    if (raw <= anchors[anchors.length-1].raw) return 1000;
+    if (raw >= anchors[0].raw) return 0;
+    for (let i = 0; i < anchors.length - 1; i++) {
+      const a = anchors[i], b = anchors[i+1]; // descending raw
+      if (raw <= a.raw && raw >= b.raw) {
+        const t = (a.raw - raw) / (a.raw - b.raw);
+        return Math.round(a.score + t * (b.score - a.score));
+      }
+    }
+    return 0;
+  }
+  // higher-better (pullup, jump)
+  if (raw <= anchors[0].raw) return anchors[0].score;
+  if (raw >= anchors[anchors.length-1].raw) return anchors[anchors.length-1].score;
+  for (let i = 0; i < anchors.length - 1; i++) {
+    const a = anchors[i], b = anchors[i+1];
+    if (raw >= a.raw && raw <= b.raw) {
+      const t = (raw - a.raw) / (b.raw - a.raw);
+      return Math.round(a.score + t * (b.score - a.score));
+    }
+  }
+  return 0;
+}
+
+function getBand(score) {
+  return BANDS.find(b => score >= b.min && score <= b.max) || BANDS[0];
+}
+
+function bandPill(score) {
+  const b = getBand(score);
+  return `<span class="band-pill ${b.cls}">${b.label}</span>`;
+}
+
+// ── Demo seed data (replaced by live Supabase data in production) ──
+const DEMO_ATHLETES = [
+  { id:'DC26-0042', name:'Marcus Webb',    pullup:18, dash:4.72, jump:110 },
+  { id:'DC26-0017', name:'Jordan Reyes',   pullup:22, dash:4.55, jump:118 },
+  { id:'DC26-0091', name:'Tyler Okafor',   pullup:12, dash:5.10, jump:96  },
+  { id:'DC26-0033', name:'Devon Park',     pullup:8,  dash:5.45, jump:84  },
+  { id:'DC26-0058', name:'Caleb Morrison', pullup:25, dash:4.40, jump:122 },
+  { id:'DC26-0074', name:'Nate Alvarez',   pullup:15, dash:4.88, jump:104 },
+  { id:'DC26-0006', name:'Sam Bridges',    pullup:6,  dash:5.90, jump:78  },
+  { id:'DC26-0019', name:'Alex Tran',      pullup:20, dash:4.62, jump:115 },
+];
+
+// Score all athletes
+const scored = DEMO_ATHLETES.map(a => {
+  const ps = scoreEventDirect('pullup', a.pullup);
+  const ds = scoreEventDirect('dash',   a.dash);
+  const js = scoreEventDirect('jump',   a.jump);
+  const dcs = Math.round(ps * 0.33 + ds * 0.33 + js * 0.34);
+  return { ...a, ps, ds, js, dcs };
+});
+
+// ── Render tables ──
+function renderOverall() {
+  const sorted = [...scored].sort((a,b) => b.dcs - a.dcs);
+  const tbody = document.getElementById('tbody-overall');
+  tbody.innerHTML = sorted.map((a, i) => `
+    <tr>
+      <td class="rank-cell ${i < 3 ? 'top' : ''}">${i+1}</td>
+      <td>
+        <div class="athlete-name">${a.name}</div>
+        <div class="sub-score">${a.id}</div>
+      </td>
+      <td><strong>${a.pullup}</strong> <span class="sub-score">reps</span></td>
+      <td><strong>${a.dash}</strong> <span class="sub-score">sec</span></td>
+      <td><strong>${a.jump}"</strong></td>
+      <td class="score-cell">${a.dcs}</td>
+      <td>${bandPill(a.dcs)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderPullup() {
+  const sorted = [...scored].sort((a,b) => b.pullup - a.pullup);
+  const tbody = document.getElementById('tbody-pullup');
+  tbody.innerHTML = sorted.map((a,i) => `
+    <tr>
+      <td class="rank-cell ${i < 3 ? 'top' : ''}">${i+1}</td>
+      <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}</div></td>
+      <td><strong>${a.pullup}</strong> reps</td>
+      <td class="score-cell">${a.ps}</td>
+      <td>${bandPill(a.ps)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderDash() {
+  const sorted = [...scored].sort((a,b) => a.dash - b.dash);
+  const tbody = document.getElementById('tbody-dash');
+  tbody.innerHTML = sorted.map((a,i) => `
+    <tr>
+      <td class="rank-cell ${i < 3 ? 'top' : ''}">${i+1}</td>
+      <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}</div></td>
+      <td><strong>${a.dash}</strong> sec</td>
+      <td class="score-cell">${a.ds}</td>
+      <td>${bandPill(a.ds)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderJump() {
+  const sorted = [...scored].sort((a,b) => b.jump - a.jump);
+  const tbody = document.getElementById('tbody-jump');
+  tbody.innerHTML = sorted.map((a,i) => `
+    <tr>
+      <td class="rank-cell ${i < 3 ? 'top' : ''}">${i+1}</td>
+      <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}</div></td>
+      <td><strong>${a.jump}"</strong></td>
+      <td class="score-cell">${a.js}</td>
+      <td>${bandPill(a.js)}</td>
+    </tr>
+  `).join('');
+}
+
+// ── Tab switching ──
+function switchTab(panel, btn) {
+  document.querySelectorAll('.challenge-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`panel-${panel}`).classList.add('active');
+  btn.classList.add('active');
+}
+
+// Init
+renderOverall();
+renderPullup();
+renderDash();
+renderJump();
+</script>
+
+</body>
+</html>
