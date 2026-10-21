@@ -286,11 +286,21 @@
 
 <!-- Tabs -->
 <div class="admin-tabs">
-  <button class="admin-tab active" onclick="switchTab('overview', this)">📊 Overview</button>
-  <button class="admin-tab" onclick="switchTab('results', this)">📋 Results</button>
-  <button class="admin-tab" onclick="switchTab('athletes', this)">👥 Athletes</button>
-  <button class="admin-tab" onclick="switchTab('officials', this)">🏅 Officials</button>
-  <button class="admin-tab" onclick="switchTab('export', this)">⬇ Export</button>
+  <button class="admin-tab active" onclick="switchTab('overview', this)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:5px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview
+  </button>
+  <button class="admin-tab" onclick="switchTab('results', this)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:5px;"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>Results
+  </button>
+  <button class="admin-tab" onclick="switchTab('athletes', this)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:5px;"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="9" r="2"/><path d="M21 21v-1a3 3 0 0 0-2-2.83"/></svg>Athletes
+  </button>
+  <button class="admin-tab" onclick="switchTab('officials', this)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:5px;"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>Officials
+  </button>
+  <button class="admin-tab" onclick="switchTab('export', this)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export
+  </button>
 </div>
 
 <!-- ══ OVERVIEW ══ -->
@@ -468,7 +478,7 @@
         <h2>Manage Officials</h2>
         <div class="subtitle">Officials listed here can log in to the Official app using their assigned passcode.</div>
       </div>
-      <button class="btn-export" style="background:#7c3aed;" onclick="openAddOfficial()">+ Add Official</button>
+      <button class="btn-export" style="background:#7c3aed;" onclick="openAddOfficial()">Add Official</button>
     </div>
     <div class="admin-table-wrap">
       <table class="admin-table">
@@ -512,9 +522,9 @@
     <h2>Export Results</h2>
     <div class="subtitle">Download all non-voided attempt data as CSV for import into Supabase or any spreadsheet.</div>
     <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;">
-      <button class="btn-export" onclick="exportCSV('results')">⬇ All Attempts (CSV)</button>
-      <button class="btn-export" onclick="exportCSV('bests')">⬇ Best Results Only (CSV)</button>
-      <button class="btn-export" onclick="exportCSV('athletes')">⬇ Athlete List (CSV)</button>
+      <button class="btn-export" onclick="exportCSV('results')">All Attempts (CSV)</button>
+      <button class="btn-export" onclick="exportCSV('bests')">Best Results Only (CSV)</button>
+      <button class="btn-export" onclick="exportCSV('athletes')">Athlete List (CSV)</button>
     </div>
   </div>
 
@@ -915,6 +925,7 @@ function renderOfficials() {
     tbody.innerHTML = '';
     empty.style.display = 'block';
     closeOfficialDetail();
+    renderManagedOfficials();
     return;
   }
   empty.style.display = 'none';
