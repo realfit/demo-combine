@@ -186,8 +186,8 @@
     }
     .login-card {
       background: var(--white); border-radius: var(--radius);
-      padding: 40px; width: 320px; text-align: center;
-      overflow: visible;
+      padding: 40px; width: min(320px, calc(100vw - 48px)); text-align: center;
+      overflow: visible; box-sizing: border-box;
     }
     .login-card h2 { font-size: 1.3rem; font-weight: 900; margin-bottom: 6px; }
     .login-card p  { font-size: 0.82rem; color: var(--gray); margin-bottom: 24px; }

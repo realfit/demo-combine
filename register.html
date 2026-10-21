@@ -82,34 +82,45 @@
 
       <div style="margin-bottom:20px;">
         <div style="font-family:var(--display);font-size:1.1rem;font-weight:800;color:var(--brand);margin-bottom:4px;">Events</div>
-        <div style="font-size:0.82rem;color:var(--gray);">Select the events you plan to compete in. You can enter all three.</div>
+        <div style="font-size:0.82rem;color:var(--gray);">All three events are required to receive a Demo Combine Score.</div>
       </div>
 
+      <!-- Hidden inputs — all three events always selected -->
+      <input type="hidden" name="events" value="pullup">
+      <input type="hidden" name="events" value="dash">
+      <input type="hidden" name="events" value="jump">
+
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
-        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--gray-mid);border-radius:8px;transition:border-color 0.2s;" id="evt-pullup">
-          <input type="checkbox" name="events" value="pullup" onchange="highlightEvent(this)" style="width:18px;height:18px;accent-color:var(--accent);">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid var(--accent);border-radius:8px;background:#eff6ff;">
+          <div style="width:18px;height:18px;background:var(--accent);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4.5L4 7.5L10 1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
           <div>
             <div style="font-weight:700;color:var(--brand);font-size:0.95rem;">💪 Pull-Ups</div>
             <div style="font-size:0.78rem;color:var(--gray);">Max reps · dead hang · overhand grip</div>
           </div>
           <div style="margin-left:auto;font-family:var(--display);font-size:0.78rem;font-weight:700;color:var(--accent);">33%</div>
-        </label>
-        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--gray-mid);border-radius:8px;transition:border-color 0.2s;" id="evt-dash">
-          <input type="checkbox" name="events" value="dash" onchange="highlightEvent(this)" style="width:18px;height:18px;accent-color:var(--accent);">
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid var(--accent);border-radius:8px;background:#eff6ff;">
+          <div style="width:18px;height:18px;background:var(--accent);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4.5L4 7.5L10 1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
           <div>
             <div style="font-weight:700;color:var(--brand);font-size:0.95rem;">⚡ 40-Yard Dash</div>
             <div style="font-size:0.78rem;color:var(--gray);">Best of 2 · standing start · electronic timing</div>
           </div>
           <div style="margin-left:auto;font-family:var(--display);font-size:0.78rem;font-weight:700;color:var(--accent);">33%</div>
-        </label>
-        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--gray-mid);border-radius:8px;transition:border-color 0.2s;" id="evt-jump">
-          <input type="checkbox" name="events" value="jump" onchange="highlightEvent(this)" style="width:18px;height:18px;accent-color:var(--accent);">
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid var(--accent);border-radius:8px;background:#eff6ff;">
+          <div style="width:18px;height:18px;background:var(--accent);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4.5L4 7.5L10 1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
           <div>
             <div style="font-weight:700;color:var(--brand);font-size:0.95rem;">🦵 Broad Jump</div>
-            <div style="font-size:0.78rem;color:var(--gray);">Best of 2 · two-foot takeoff · measured in inches</div>
+            <div style="font-size:0.78rem;color:var(--gray);">Best of 3 · two-foot takeoff · measured in inches</div>
           </div>
           <div style="margin-left:auto;font-family:var(--display);font-size:0.78rem;font-weight:700;color:var(--accent);">34%</div>
-        </label>
+        </div>
       </div>
 
       <div class="form-divider"></div>
@@ -135,27 +146,12 @@
 </footer>
 
 <script>
-function highlightEvent(checkbox) {
-  const label = checkbox.closest('label');
-  if (checkbox.checked) {
-    label.style.borderColor = 'var(--accent)';
-    label.style.background = '#eff6ff';
-  } else {
-    label.style.borderColor = 'var(--gray-mid)';
-    label.style.background = '';
-  }
-}
-
 async function handleRegister(e) {
   e.preventDefault();
   const form = e.target;
   const btn = form.querySelector('button[type="submit"]');
 
-  const selectedEvents = [...form.querySelectorAll('[name="events"]:checked')].map(c => c.value);
-  if (selectedEvents.length === 0) {
-    alert('Please select at least one event.');
-    return;
-  }
+  const selectedEvents = [...form.querySelectorAll('[name="events"]')].map(c => c.value);
 
   // Generate athlete ID: DC26-NNNN
   const year = new Date().getFullYear().toString().slice(-2);
