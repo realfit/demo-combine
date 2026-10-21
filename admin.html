@@ -495,7 +495,10 @@
     <label>Name / ID</label>
     <input type="text" id="officialName" placeholder="e.g. J. Martinez">
     <label>Passcode</label>
-    <input type="text" id="officialPasscode" placeholder="e.g. combine2026">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;">
+      <input type="text" id="officialPasscode" placeholder="e.g. 4821" style="margin-bottom:0;flex:1;">
+      <button type="button" onclick="generatePasscode()" style="padding:11px 14px;background:var(--gray-light);border:1.5px solid var(--gray-mid);border-radius:8px;font-weight:700;font-size:0.82rem;color:var(--brand);cursor:pointer;white-space:nowrap;flex-shrink:0;">Generate</button>
+    </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeOfficialModal()">Cancel</button>
       <button class="btn-save" onclick="saveOfficial()">Save</button>
@@ -997,6 +1000,10 @@ function renderManagedOfficials() {
 }
 
 let editingOfficialId = null;
+
+function generatePasscode() {
+  document.getElementById('officialPasscode').value = String(Math.floor(1000 + Math.random() * 9000));
+}
 
 function openAddOfficial() {
   editingOfficialId = null;
