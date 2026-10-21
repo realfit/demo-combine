@@ -406,6 +406,33 @@ function bestAttempt(eventId, attempts) {
 }
 
 // ════════════════════════════════════════════
+// LOCALSTORAGE DATA LAYER
+// Shared with admin.html and scoreboard.html
+// ════════════════════════════════════════════
+const LS_RESULTS = 'dc_results';       // array of attempt records
+const LS_ATHLETES = 'dc_athletes';     // array of registered athletes
+
+function loadResults() {
+  try { return JSON.parse(localStorage.getItem(LS_RESULTS) || '[]'); } catch(e) { return []; }
+}
+function saveResults(records) {
+  try { localStorage.setItem(LS_RESULTS, JSON.stringify(records)); } catch(e) {}
+}
+function persistAttempt(athleteId, eventId, attemptNum, value) {
+  const records = loadResults();
+  records.push({
+    athleteId,
+    event: eventId,
+    attemptNum,
+    value,
+    score: calcScore(eventId, value),
+    timestamp: new Date().toISOString(),
+    voided: false
+  });
+  saveResults(records);
+}
+
+// ════════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════════
 let currentAthlete = null;
@@ -460,8 +487,21 @@ function loadAthlete(id) {
   attempts = {};
   EVENT_CONFIG.forEach(e => attempts[e.id] = []);
 
+  // Pre-populate name from registration if available
+  let athleteName = 'Athlete ' + currentAthlete;
+  try {
+    const reg = JSON.parse(sessionStorage.getItem('dc_registration') || '{}');
+    if (reg.athleteId === currentAthlete && reg.firstName) {
+      athleteName = reg.firstName + ' ' + reg.lastName;
+    }
+    // Also check localStorage athletes store
+    const athletes = JSON.parse(localStorage.getItem(LS_ATHLETES) || '[]');
+    const found = athletes.find(a => a.athleteId === currentAthlete);
+    if (found) athleteName = found.firstName + ' ' + found.lastName;
+  } catch(e) {}
+
   document.getElementById('cardAthleteId').textContent = currentAthlete;
-  document.getElementById('cardAthleteName').textContent = 'Athlete ' + currentAthlete;
+  document.getElementById('cardAthleteName').textContent = athleteName;
   document.getElementById('cardStatus').textContent = 'Pending';
   document.getElementById('cardStatus').className = 'status-badge pending';
   document.getElementById('dcsCard').style.display = 'none';
@@ -604,8 +644,11 @@ function addAttempt(eventId) {
   attempts[eventId].push(raw);
   input.value = '';
 
-  // Log
+  // Persist to localStorage
   const attemptNum = attempts[eventId].length;
+  persistAttempt(currentAthlete, eventId, attemptNum, raw);
+
+  // Log
   const best = bestAttempt(eventId, attempts[eventId]);
   addToLog(currentAthlete, cfg, raw, attemptNum, raw === best);
 

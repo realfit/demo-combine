@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin · REALFIT Demo Combine</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { background: var(--gray-light); }
+
+    .admin-header {
+      background: #111827;
+      color: var(--white);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .admin-header h1 { font-size: 1.3rem; font-weight: 900; }
+    .admin-badge {
+      font-size: 0.65rem; font-weight: 800; letter-spacing: .16em;
+      text-transform: uppercase; background: #7c3aed;
+      color: var(--white); padding: 4px 12px; border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .admin-tabs {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-mid);
+      display: flex;
+      gap: 0;
+      padding: 0 16px;
+    }
+    .admin-tab {
+      padding: 14px 18px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--gray);
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .admin-tab.active { color: #7c3aed; border-bottom-color: #7c3aed; }
+    .admin-tab:hover:not(.active) { color: var(--brand); }
+
+    .admin-panel { display: none; padding: 20px 16px; max-width: 900px; margin: 0 auto; }
+    .admin-panel.active { display: block; }
+
+    /* ── Cards ── */
+    .admin-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+    }
+    .admin-card h2 {
+      font-size: 1rem; font-weight: 800; color: var(--brand);
+      margin-bottom: 4px;
+    }
+    .admin-card .subtitle {
+      font-size: 0.78rem; color: var(--gray); margin-bottom: 16px;
+    }
+
+    /* ── Stat bar ── */
+    .stat-bar {
+      display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px;
+    }
+    .stat-tile {
+      background: var(--gray-light); border-radius: 8px; padding: 16px 20px;
+      flex: 1; min-width: 120px; text-align: center;
+    }
+    .stat-tile .val {
+      font-family: var(--display); font-size: 2rem; font-weight: 900;
+      color: #7c3aed; line-height: 1;
+    }
+    .stat-tile .lbl {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--gray); margin-top: 4px;
+    }
+
+    /* ── Tables ── */
+    .admin-table-wrap { overflow-x: auto; }
+    .admin-table {
+      width: 100%; border-collapse: collapse; font-size: 0.83rem;
+    }
+    .admin-table th {
+      text-align: left; padding: 8px 12px;
+      font-size: 0.68rem; font-weight: 800; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--gray);
+      border-bottom: 2px solid var(--gray-mid);
+      white-space: nowrap;
+    }
+    .admin-table td {
+      padding: 10px 12px; border-bottom: 1px solid var(--gray-mid);
+      vertical-align: middle;
+    }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tr:hover td { background: #f8f9ff; }
+    .admin-table tr.voided td { opacity: 0.45; text-decoration: line-through; }
+
+    .mono { font-family: var(--display); font-weight: 700; color: var(--brand); }
+    .ts { font-size: 0.72rem; color: var(--gray); }
+
+    /* ── Action buttons ── */
+    .btn-void {
+      font-size: 0.72rem; font-weight: 700; color: #dc2626;
+      background: none; border: 1px solid #fca5a5; border-radius: 4px;
+      padding: 3px 8px; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-void:hover { background: #fef2f2; }
+    .btn-restore {
+      font-size: 0.72rem; font-weight: 700; color: #16a34a;
+      background: none; border: 1px solid #86efac; border-radius: 4px;
+      padding: 3px 8px; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-restore:hover { background: #f0fdf4; }
+    .btn-edit {
+      font-size: 0.72rem; font-weight: 700; color: var(--accent);
+      background: none; border: 1px solid #93c5fd; border-radius: 4px;
+      padding: 3px 8px; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-edit:hover { background: #eff6ff; }
+
+    /* ── Edit modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; display: none;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-card {
+      background: var(--white); border-radius: var(--radius);
+      padding: 28px; width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .modal-card h3 { font-size: 1rem; font-weight: 800; margin-bottom: 4px; }
+    .modal-card p  { font-size: 0.82rem; color: var(--gray); margin-bottom: 18px; }
+    .modal-card input {
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid var(--gray-mid); border-radius: 8px;
+      font-family: var(--display); font-size: 1.3rem; font-weight: 700;
+      color: var(--brand); outline: none; margin-bottom: 14px;
+    }
+    .modal-card input:focus { border-color: #7c3aed; }
+    .modal-actions { display: flex; gap: 10px; }
+    .btn-save {
+      flex: 1; padding: 11px; background: #7c3aed; color: var(--white);
+      font-family: var(--display); font-weight: 800; border: none;
+      border-radius: 8px; cursor: pointer; font-size: 0.95rem;
+    }
+    .btn-cancel {
+      padding: 11px 18px; background: var(--gray-light); color: var(--brand);
+      font-family: var(--display); font-weight: 700; border: none;
+      border-radius: 8px; cursor: pointer; font-size: 0.9rem;
+    }
+
+    /* ── Athlete status pills ── */
+    .pill-complete { background: #dcfce7; color: #166534; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+    .pill-partial  { background: #fef9c3; color: #854d0e; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+    .pill-pending  { background: var(--gray-mid); color: var(--gray); font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+
+    /* ── Export button ── */
+    .btn-export {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px; background: #111827; color: var(--white);
+      font-family: var(--display); font-weight: 800; font-size: 0.88rem;
+      border: none; border-radius: 8px; cursor: pointer;
+    }
+    .btn-export:hover { background: #1f2937; }
+
+    /* ── Login ── */
+    #login-screen {
+      position: fixed; inset: 0; background: #111827;
+      display: flex; align-items: center; justify-content: center; z-index: 999;
+    }
+    .login-card {
+      background: var(--white); border-radius: var(--radius);
+      padding: 40px; width: 320px; text-align: center;
+    }
+    .login-card h2 { font-size: 1.3rem; font-weight: 900; margin-bottom: 6px; }
+    .login-card p  { font-size: 0.82rem; color: var(--gray); margin-bottom: 24px; }
+    .login-card input {
+      width: 100%; padding: 11px 14px; border: 1.5px solid var(--gray-mid);
+      border-radius: 8px; font-size: 1rem; margin-bottom: 14px; outline: none;
+    }
+    .login-card input:focus { border-color: #7c3aed; }
+    .login-card button {
+      width: 100%; padding: 13px; background: #7c3aed; color: var(--white);
+      font-family: var(--display); font-weight: 800; font-size: 1rem;
+      border: none; border-radius: 8px; cursor: pointer;
+    }
+    .login-error { color: #dc2626; font-size: 0.8rem; margin-top: 8px; display: none; }
+
+    .empty-notice {
+      text-align: center; padding: 40px 24px; color: var(--gray); font-size: 0.88rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login gate -->
+<div id="login-screen">
+  <div class="login-card">
+    <div style="font-size:1.8rem;margin-bottom:8px;">🔐</div>
+    <h2>Admin Access</h2>
+    <p>Restricted to event administrators.</p>
+    <input type="password" id="passcode" placeholder="Admin passcode"
+           onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Enter →</button>
+    <div class="login-error" id="login-error">Incorrect passcode.</div>
+  </div>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-card">
+    <h3 id="modalTitle">Edit Result</h3>
+    <p id="modalDesc">—</p>
+    <input type="number" id="modalInput" placeholder="0">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveEdit()">Save Change</button>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="admin-header">
+  <div>
+    <div style="font-size:0.65rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:2px;">ScoreMyCombine</div>
+    <h1>Event Administration</h1>
+  </div>
+  <span class="admin-badge">Admin</span>
+</div>
+
+<!-- Tabs -->
+<div class="admin-tabs">
+  <button class="admin-tab active" onclick="switchTab('overview', this)">📊 Overview</button>
+  <button class="admin-tab" onclick="switchTab('results', this)">📋 All Results</button>
+  <button class="admin-tab" onclick="switchTab('athletes', this)">👥 Athletes</button>
+  <button class="admin-tab" onclick="switchTab('export', this)">⬇ Export</button>
+</div>
+
+<!-- ══ OVERVIEW ══ -->
+<div class="admin-panel active" id="panel-overview">
+
+  <div class="stat-bar" id="statBar">
+    <!-- filled by JS -->
+  </div>
+
+  <div class="admin-card">
+    <h2>Recent Activity</h2>
+    <div class="subtitle">Last 20 attempts entered this session.</div>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Athlete</th>
+            <th>Event</th>
+            <th>Attempt</th>
+            <th>Value</th>
+            <th>Score</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-recent"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ ALL RESULTS ══ -->
+<div class="admin-panel" id="panel-results">
+  <div class="admin-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h2>All Logged Attempts</h2>
+        <div class="subtitle">Every attempt entered via the Official app. Click Edit to correct a value, or Void to exclude from scoring.</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <label style="font-size:0.78rem;color:var(--gray);font-weight:700;">
+          <input type="checkbox" id="showVoided" onchange="renderResults()" style="margin-right:4px;">
+          Show voided
+        </label>
+      </div>
+    </div>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Athlete ID</th>
+            <th>Name</th>
+            <th>Event</th>
+            <th>#</th>
+            <th>Value</th>
+            <th>Score</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-results"></tbody>
+      </table>
+    </div>
+    <div id="results-empty" class="empty-notice" style="display:none;">No results logged yet. Results appear here as officials enter attempts.</div>
+  </div>
+</div>
+
+<!-- ══ ATHLETES ══ -->
+<div class="admin-panel" id="panel-athletes">
+  <div class="admin-card">
+    <h2>Registered Athletes</h2>
+    <div class="subtitle">Athletes who completed registration on this device. Completion status based on logged results.</div>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Athlete ID</th>
+            <th>Name</th>
+            <th>Events Selected</th>
+            <th>Pull-Ups</th>
+            <th>40-Yd Dash</th>
+            <th>Broad Jump</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-athletes"></tbody>
+      </table>
+    </div>
+    <div id="athletes-empty" class="empty-notice" style="display:none;">No athletes registered on this device yet.</div>
+  </div>
+</div>
+
+<!-- ══ EXPORT ══ -->
+<div class="admin-panel" id="panel-export">
+  <div class="admin-card">
+    <h2>Export Results</h2>
+    <div class="subtitle">Download all non-voided attempt data as CSV for import into Supabase or any spreadsheet.</div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;">
+      <button class="btn-export" onclick="exportCSV('results')">⬇ All Attempts (CSV)</button>
+      <button class="btn-export" onclick="exportCSV('bests')">⬇ Best Results Only (CSV)</button>
+      <button class="btn-export" onclick="exportCSV('athletes')">⬇ Athlete List (CSV)</button>
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <h2>Data Management</h2>
+    <div class="subtitle">Danger zone — use with care.</div>
+    <button onclick="clearAllResults()" style="padding:10px 20px;background:#fef2f2;color:#dc2626;border:1.5px solid #fca5a5;border-radius:8px;font-weight:700;font-size:0.85rem;cursor:pointer;">
+      🗑 Clear All Results
+    </button>
+    <span style="font-size:0.75rem;color:var(--gray);margin-left:12px;">Removes all logged attempts from localStorage. Cannot be undone.</span>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════
+const ADMIN_PASSCODE = 'realfit2026admin';
+const LS_RESULTS  = 'dc_results';
+const LS_ATHLETES = 'dc_athletes';
+
+const EVENT_LABELS = { pullup: 'Pull-Ups', dash: '40-Yd Dash', jump: 'Broad Jump' };
+const EVENT_UNITS  = { pullup: 'reps', dash: 'sec', jump: 'in' };
+
+// Scoring engine (mirrors official.html)
+const ANCHORS = {
+  pullup: [{raw:0,score:0},{raw:2,score:100},{raw:5,score:250},{raw:8,score:400},{raw:12,score:550},{raw:16,score:700},{raw:20,score:820},{raw:25,score:920},{raw:30,score:1000}],
+  dash:   [{raw:7.50,score:0},{raw:6.50,score:100},{raw:5.80,score:250},{raw:5.20,score:400},{raw:4.90,score:550},{raw:4.65,score:700},{raw:4.45,score:820},{raw:4.30,score:920},{raw:4.20,score:1000}],
+  jump:   [{raw:48,score:0},{raw:60,score:100},{raw:72,score:250},{raw:84,score:400},{raw:96,score:550},{raw:108,score:700},{raw:114,score:820},{raw:120,score:920},{raw:126,score:1000}]
+};
+
+function calcScore(eventId, raw) {
+  const anchors = ANCHORS[eventId];
+  if (!anchors || raw == null) return null;
+  if (eventId === 'dash') {
+    if (raw <= anchors[anchors.length-1].raw) return 1000;
+    if (raw >= anchors[0].raw) return 0;
+    for (let i = 0; i < anchors.length - 1; i++) {
+      const a = anchors[i], b = anchors[i+1];
+      if (raw <= a.raw && raw >= b.raw) {
+        const t = (a.raw - raw) / (a.raw - b.raw);
+        return Math.round(a.score + t * (b.score - a.score));
+      }
+    }
+    return 0;
+  }
+  if (raw <= anchors[0].raw) return anchors[0].score;
+  if (raw >= anchors[anchors.length-1].raw) return anchors[anchors.length-1].score;
+  for (let i = 0; i < anchors.length - 1; i++) {
+    const a = anchors[i], b = anchors[i+1];
+    if (raw >= a.raw && raw <= b.raw) {
+      const t = (raw - a.raw) / (b.raw - a.raw);
+      return Math.round(a.score + t * (b.score - a.score));
+    }
+  }
+  return 0;
+}
+
+// ══════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════
+function doLogin() {
+  if (document.getElementById('passcode').value === ADMIN_PASSCODE) {
+    document.getElementById('login-screen').style.display = 'none';
+    renderAll();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+// ══════════════════════════════════════════
+// DATA HELPERS
+// ══════════════════════════════════════════
+function loadResults() {
+  try { return JSON.parse(localStorage.getItem(LS_RESULTS) || '[]'); } catch(e) { return []; }
+}
+function saveResults(r) {
+  try { localStorage.setItem(LS_RESULTS, JSON.stringify(r)); } catch(e) {}
+}
+function loadAthletes() {
+  try { return JSON.parse(localStorage.getItem(LS_ATHLETES) || '[]'); } catch(e) { return []; }
+}
+function athleteName(id) {
+  const athletes = loadAthletes();
+  const a = athletes.find(a => a.athleteId === id);
+  return a ? a.firstName + ' ' + a.lastName : id;
+}
+function fmtTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}
+
+// ══════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════
+function switchTab(panel, btn) {
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById(`panel-${panel}`).classList.add('active');
+  btn.classList.add('active');
+  renderAll();
+}
+
+// ══════════════════════════════════════════
+// RENDER ALL
+// ══════════════════════════════════════════
+function renderAll() {
+  renderStats();
+  renderRecent();
+  renderResults();
+  renderAthletes();
+}
+
+// ── Stats ──
+function renderStats() {
+  const results  = loadResults();
+  const athletes = loadAthletes();
+  const active   = results.filter(r => !r.voided);
+  const uniqueIds = new Set(active.map(r => r.athleteId));
+  const complete  = [...uniqueIds].filter(id => {
+    return ['pullup','dash','jump'].every(ev =>
+      active.some(r => r.athleteId === id && r.event === ev)
+    );
+  });
+
+  document.getElementById('statBar').innerHTML = `
+    <div class="stat-tile"><div class="val">${athletes.length}</div><div class="lbl">Registered</div></div>
+    <div class="stat-tile"><div class="val">${uniqueIds.size}</div><div class="lbl">With Results</div></div>
+    <div class="stat-tile"><div class="val">${complete.length}</div><div class="lbl">All 3 Events</div></div>
+    <div class="stat-tile"><div class="val">${active.length}</div><div class="lbl">Total Attempts</div></div>
+    <div class="stat-tile"><div class="val">${results.filter(r=>r.voided).length}</div><div class="lbl">Voided</div></div>
+  `;
+}
+
+// ── Recent ──
+function renderRecent() {
+  const results = loadResults().slice().reverse().slice(0, 20);
+  const tbody = document.getElementById('tbody-recent');
+  if (!results.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-notice">No activity yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = results.map(r => `
+    <tr class="${r.voided ? 'voided' : ''}">
+      <td class="ts">${fmtTime(r.timestamp)}</td>
+      <td class="mono">${r.athleteId}</td>
+      <td>${EVENT_LABELS[r.event] || r.event}</td>
+      <td>#${r.attemptNum}</td>
+      <td><strong>${r.value}</strong> ${EVENT_UNITS[r.event]}</td>
+      <td>${r.score ?? '—'}</td>
+      <td>${r.voided
+        ? '<span style="color:#dc2626;font-weight:700;font-size:0.72rem;">Voided</span>'
+        : '<span style="color:#16a34a;font-weight:700;font-size:0.72rem;">Active</span>'}</td>
+    </tr>
+  `).join('');
+}
+
+// ── All Results ──
+function renderResults() {
+  const showVoided = document.getElementById('showVoided')?.checked;
+  let results = loadResults();
+  if (!showVoided) results = results.filter(r => !r.voided);
+
+  const empty = document.getElementById('results-empty');
+  const tbody = document.getElementById('tbody-results');
+
+  if (!results.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = results.map((r, i) => {
+    const origIdx = loadResults().indexOf(r); // index into full array
+    return `
+    <tr class="${r.voided ? 'voided' : ''}" id="row-${i}">
+      <td class="ts">${fmtTime(r.timestamp)}</td>
+      <td class="mono">${r.athleteId}</td>
+      <td>${athleteName(r.athleteId)}</td>
+      <td>${EVENT_LABELS[r.event] || r.event}</td>
+      <td>#${r.attemptNum}</td>
+      <td><strong>${r.value}</strong> ${EVENT_UNITS[r.event]}</td>
+      <td>${r.score ?? '—'}</td>
+      <td style="white-space:nowrap;">
+        ${!r.voided
+          ? `<button class="btn-edit" onclick="openEdit(${i})">Edit</button>
+             <button class="btn-void" style="margin-left:4px;" onclick="voidResult(${i})">Void</button>`
+          : `<button class="btn-restore" onclick="restoreResult(${i})">Restore</button>`
+        }
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Athletes ──
+function renderAthletes() {
+  const athletes = loadAthletes();
+  const results  = loadResults().filter(r => !r.voided);
+  const tbody    = document.getElementById('tbody-athletes');
+  const empty    = document.getElementById('athletes-empty');
+
+  if (!athletes.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = athletes.map(a => {
+    const myResults = results.filter(r => r.athleteId === a.athleteId);
+    const hasPullup = myResults.some(r => r.event === 'pullup');
+    const hasDash   = myResults.some(r => r.event === 'dash');
+    const hasJump   = myResults.some(r => r.event === 'jump');
+    const bestPullup = hasPullup ? Math.max(...myResults.filter(r=>r.event==='pullup').map(r=>r.value)) : null;
+    const bestDash   = hasDash   ? Math.min(...myResults.filter(r=>r.event==='dash').map(r=>r.value))   : null;
+    const bestJump   = hasJump   ? Math.max(...myResults.filter(r=>r.event==='jump').map(r=>r.value))   : null;
+    const allDone = hasPullup && hasDash && hasJump;
+    const anyDone = hasPullup || hasDash || hasJump;
+    const statusPill = allDone
+      ? '<span class="pill-complete">Complete</span>'
+      : anyDone
+        ? '<span class="pill-partial">In Progress</span>'
+        : '<span class="pill-pending">Pending</span>';
+    const evtList = (a.events || []).join(', ') || '—';
+
+    return `
+    <tr>
+      <td class="mono">${a.athleteId}</td>
+      <td><strong>${a.firstName} ${a.lastName}</strong><br><span class="ts">${a.email}</span></td>
+      <td style="font-size:0.78rem;color:var(--gray);">${evtList}</td>
+      <td>${bestPullup != null ? `<strong>${bestPullup}</strong> reps` : '<span style="color:var(--gray)">—</span>'}</td>
+      <td>${bestDash   != null ? `<strong>${bestDash}</strong> sec`   : '<span style="color:var(--gray)">—</span>'}</td>
+      <td>${bestJump   != null ? `<strong>${bestJump}"</strong>`      : '<span style="color:var(--gray)">—</span>'}</td>
+      <td>${statusPill}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// EDIT / VOID / RESTORE
+// ══════════════════════════════════════════
+let editingVisibleIndex = null;
+
+function getVisibleResults() {
+  const showVoided = document.getElementById('showVoided')?.checked;
+  let results = loadResults();
+  if (!showVoided) results = results.filter(r => !r.voided);
+  return results;
+}
+
+function findFullIndex(visibleIdx) {
+  // Map visible row index back to full array index
+  const showVoided = document.getElementById('showVoided')?.checked;
+  const full = loadResults();
+  const visible = showVoided ? full : full.filter(r => !r.voided);
+  const record = visible[visibleIdx];
+  // Find the same object in full array by timestamp+athleteId
+  return full.findIndex(r =>
+    r.timestamp === record.timestamp &&
+    r.athleteId === record.athleteId &&
+    r.event     === record.event &&
+    r.attemptNum === record.attemptNum
+  );
+}
+
+function voidResult(visibleIdx) {
+  const full = loadResults();
+  const fi = findFullIndex(visibleIdx);
+  if (fi < 0) return;
+  full[fi].voided = true;
+  saveResults(full);
+  renderAll();
+}
+
+function restoreResult(visibleIdx) {
+  const full = loadResults();
+  const fi = findFullIndex(visibleIdx);
+  if (fi < 0) return;
+  full[fi].voided = false;
+  saveResults(full);
+  renderAll();
+}
+
+function openEdit(visibleIdx) {
+  const visible = getVisibleResults();
+  const r = visible[visibleIdx];
+  if (!r) return;
+  editingVisibleIndex = visibleIdx;
+  document.getElementById('modalTitle').textContent = `Edit ${EVENT_LABELS[r.event]} · ${r.athleteId}`;
+  document.getElementById('modalDesc').textContent  = `Attempt #${r.attemptNum} · currently ${r.value} ${EVENT_UNITS[r.event]}`;
+  document.getElementById('modalInput').value = r.value;
+  document.getElementById('editModal').classList.add('open');
+  setTimeout(() => document.getElementById('modalInput').focus(), 50);
+}
+
+function closeModal() {
+  document.getElementById('editModal').classList.remove('open');
+  editingVisibleIndex = null;
+}
+
+function saveEdit() {
+  if (editingVisibleIndex == null) return;
+  const newVal = parseFloat(document.getElementById('modalInput').value);
+  if (isNaN(newVal)) return;
+  const full = loadResults();
+  const fi = findFullIndex(editingVisibleIndex);
+  if (fi < 0) return;
+  full[fi].value = newVal;
+  full[fi].score = calcScore(full[fi].event, newVal);
+  full[fi].editedAt = new Date().toISOString();
+  saveResults(full);
+  closeModal();
+  renderAll();
+}
+
+// Close modal on overlay click
+document.getElementById('editModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ══════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════
+function toCSV(rows, headers) {
+  const lines = [headers.join(',')];
+  rows.forEach(row => lines.push(row.map(v => `"${String(v ?? '').replace(/"/g,'""')}"`).join(',')));
+  return lines.join('\n');
+}
+
+function downloadCSV(csv, filename) {
+  const blob = new Blob([csv], {type: 'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+function exportCSV(type) {
+  const results  = loadResults().filter(r => !r.voided);
+  const athletes = loadAthletes();
+  const date = new Date().toISOString().slice(0,10);
+
+  if (type === 'results') {
+    const csv = toCSV(
+      results.map(r => [r.athleteId, athleteName(r.athleteId), r.event, r.attemptNum, r.value, r.score, r.timestamp]),
+      ['athlete_id','name','event','attempt_num','value','score','timestamp']
+    );
+    downloadCSV(csv, `dc-results-${date}.csv`);
+  } else if (type === 'bests') {
+    const map = {};
+    results.forEach(r => {
+      if (!map[r.athleteId]) map[r.athleteId] = {};
+      const cur = map[r.athleteId][r.event];
+      const isBetter = cur == null || (r.event === 'dash' ? r.value < cur.value : r.value > cur.value);
+      if (isBetter) map[r.athleteId][r.event] = r;
+    });
+    const rows = Object.entries(map).map(([id, evts]) => {
+      const p = evts.pullup, d = evts.dash, j = evts.jump;
+      const ps = p?.score, ds = d?.score, js = j?.score;
+      const dcs = (ps!=null&&ds!=null&&js!=null) ? Math.round(ps*0.33+ds*0.33+js*0.34) : '';
+      return [id, athleteName(id), p?.value??'', p?.score??'', d?.value??'', d?.score??'', j?.value??'', j?.score??'', dcs];
+    });
+    downloadCSV(toCSV(rows,
+      ['athlete_id','name','pullup_reps','pullup_score','dash_sec','dash_score','jump_in','jump_score','dcs']
+    ), `dc-bests-${date}.csv`);
+  } else if (type === 'athletes') {
+    downloadCSV(toCSV(
+      athletes.map(a => [a.athleteId, a.firstName, a.lastName, a.email, a.dob, a.gender, (a.events||[]).join('|'), a.registeredAt]),
+      ['athlete_id','first_name','last_name','email','dob','gender','events','registered_at']
+    ), `dc-athletes-${date}.csv`);
+  }
+}
+
+function clearAllResults() {
+  if (!confirm('Clear ALL logged results? This cannot be undone.')) return;
+  localStorage.removeItem(LS_RESULTS);
+  renderAll();
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+function renderAll() {
+  renderStats();
+  renderRecent();
+  renderResults();
+  renderAthletes();
+}
+</script>
+
+</body>
+</html>

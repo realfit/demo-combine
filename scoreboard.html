@@ -348,73 +348,86 @@ const DEMO_ATHLETES = [
   { id:'DC26-0019', name:'Alex Tran',      pullup:20, dash:4.62, jump:115 },
 ];
 
-// Score all athletes
-const scored = DEMO_ATHLETES.map(a => {
-  const ps = scoreEventDirect('pullup', a.pullup);
-  const ds = scoreEventDirect('dash',   a.dash);
-  const js = scoreEventDirect('jump',   a.jump);
-  const dcs = Math.round(ps * 0.33 + ds * 0.33 + js * 0.34);
-  return { ...a, ps, ds, js, dcs };
-});
+// ── Score + render (called after fetchResults resolves) ──
+let scored = [];
 
-// ── Render tables ──
+function scoreAll(athletes) {
+  scored = athletes.map(a => {
+    const ps = a.pullup != null ? scoreEventDirect('pullup', a.pullup) : null;
+    const ds = a.dash   != null ? scoreEventDirect('dash',   a.dash)   : null;
+    const js = a.jump   != null ? scoreEventDirect('jump',   a.jump)   : null;
+    const dcs = (ps != null && ds != null && js != null)
+      ? Math.round(ps * 0.33 + ds * 0.33 + js * 0.34)
+      : null;
+    return { ...a, ps, ds, js, dcs };
+  });
+}
+
+function fmt(val, suffix) {
+  return val != null ? `<strong>${val}</strong>${suffix}` : '<span style="color:var(--gray)">—</span>';
+}
+function fmtScore(score) {
+  return score != null ? score : '<span style="color:var(--gray)">—</span>';
+}
+function fmtBand(score) {
+  return score != null ? bandPill(score) : '<span style="color:var(--gray);font-size:0.78rem">Pending</span>';
+}
+
 function renderOverall() {
-  const sorted = [...scored].sort((a,b) => b.dcs - a.dcs);
-  const tbody = document.getElementById('tbody-overall');
-  tbody.innerHTML = sorted.map((a, i) => `
+  const withDcs  = scored.filter(a => a.dcs != null).sort((a,b) => b.dcs - a.dcs);
+  const noDcs    = scored.filter(a => a.dcs == null);
+  const all = [...withDcs, ...noDcs];
+  document.getElementById('tbody-overall').innerHTML = all.map((a, i) => `
     <tr>
-      <td class="rank-cell ${i < 3 ? 'top' : ''}">${i+1}</td>
-      <td>
-        <div class="athlete-name">${a.name}</div>
-        <div class="sub-score">${a.id}</div>
-      </td>
-      <td><strong>${a.pullup}</strong> <span class="sub-score">reps</span></td>
-      <td><strong>${a.dash}</strong> <span class="sub-score">sec</span></td>
-      <td><strong>${a.jump}"</strong></td>
-      <td class="score-cell">${a.dcs}</td>
-      <td>${bandPill(a.dcs)}</td>
+      <td class="rank-cell ${i < 3 && a.dcs != null ? 'top' : ''}">${a.dcs != null ? i+1 : '—'}</td>
+      <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}</div></td>
+      <td>${fmt(a.pullup, ' <span class="sub-score">reps</span>')}</td>
+      <td>${fmt(a.dash,   ' <span class="sub-score">sec</span>')}</td>
+      <td>${fmt(a.jump,   '"')}</td>
+      <td class="score-cell">${fmtScore(a.dcs)}</td>
+      <td>${fmtBand(a.dcs)}</td>
     </tr>
   `).join('');
 }
 
 function renderPullup() {
-  const sorted = [...scored].sort((a,b) => b.pullup - a.pullup);
-  const tbody = document.getElementById('tbody-pullup');
-  tbody.innerHTML = sorted.map((a,i) => `
+  const has  = scored.filter(a => a.pullup != null).sort((a,b) => b.pullup - a.pullup);
+  const none = scored.filter(a => a.pullup == null);
+  document.getElementById('tbody-pullup').innerHTML = [...has, ...none].map((a,i) => `
     <tr>
-      <td class="rank-cell ${i < 3 ? 'top' : ''}">${i+1}</td>
+      <td class="rank-cell ${i < 3 && a.pullup != null ? 'top' : ''}">${a.pullup != null ? i+1 : '—'}</td>
       <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}</div></td>
-      <td><strong>${a.pullup}</strong> reps</td>
-      <td class="score-cell">${a.ps}</td>
-      <td>${bandPill(a.ps)}</td>
+      <td>${fmt(a.pullup, ' reps')}</td>
+      <td class="score-cell">${fmtScore(a.ps)}</td>
+      <td>${fmtBand(a.ps)}</td>
     </tr>
   `).join('');
 }
 
 function renderDash() {
-  const sorted = [...scored].sort((a,b) => a.dash - b.dash);
-  const tbody = document.getElementById('tbody-dash');
-  tbody.innerHTML = sorted.map((a,i) => `
+  const has  = scored.filter(a => a.dash != null).sort((a,b) => a.dash - b.dash);
+  const none = scored.filter(a => a.dash == null);
+  document.getElementById('tbody-dash').innerHTML = [...has, ...none].map((a,i) => `
     <tr>
-      <td class="rank-cell ${i < 3 ? 'top' : ''}">${i+1}</td>
+      <td class="rank-cell ${i < 3 && a.dash != null ? 'top' : ''}">${a.dash != null ? i+1 : '—'}</td>
       <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}</div></td>
-      <td><strong>${a.dash}</strong> sec</td>
-      <td class="score-cell">${a.ds}</td>
-      <td>${bandPill(a.ds)}</td>
+      <td>${fmt(a.dash, ' sec')}</td>
+      <td class="score-cell">${fmtScore(a.ds)}</td>
+      <td>${fmtBand(a.ds)}</td>
     </tr>
   `).join('');
 }
 
 function renderJump() {
-  const sorted = [...scored].sort((a,b) => b.jump - a.jump);
-  const tbody = document.getElementById('tbody-jump');
-  tbody.innerHTML = sorted.map((a,i) => `
+  const has  = scored.filter(a => a.jump != null).sort((a,b) => b.jump - a.jump);
+  const none = scored.filter(a => a.jump == null);
+  document.getElementById('tbody-jump').innerHTML = [...has, ...none].map((a,i) => `
     <tr>
-      <td class="rank-cell ${i < 3 ? 'top' : ''}">${i+1}</td>
+      <td class="rank-cell ${i < 3 && a.jump != null ? 'top' : ''}">${a.jump != null ? i+1 : '—'}</td>
       <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}</div></td>
-      <td><strong>${a.jump}"</strong></td>
-      <td class="score-cell">${a.js}</td>
-      <td>${bandPill(a.js)}</td>
+      <td>${fmt(a.jump, '"')}</td>
+      <td class="score-cell">${fmtScore(a.js)}</td>
+      <td>${fmtBand(a.js)}</td>
     </tr>
   `).join('');
 }
@@ -433,13 +446,52 @@ function switchTab(panel, btn) {
 const REFRESH_INTERVAL_MS = 30000; // 30 seconds
 
 function fetchResults() {
-  // TODO: replace with Supabase fetch when backend is live
-  // e.g. supabase.from('results').select('*').then(({data}) => processResults(data))
-  return Promise.resolve(DEMO_ATHLETES); // placeholder: returns seed data
+  // Reads localStorage dc_results (written by official.html).
+  // Merges with DEMO_ATHLETES seed data — real entries override seed for matching IDs.
+  // TODO: swap this for a Supabase fetch when backend is live.
+  try {
+    const raw = JSON.parse(localStorage.getItem('dc_results') || '[]');
+    const active = raw.filter(r => !r.voided);
+
+    if (!active.length) return Promise.resolve(DEMO_ATHLETES);
+
+    // Build a map: athleteId → { pullup: best, dash: best, jump: best }
+    const map = {};
+    active.forEach(r => {
+      if (!map[r.athleteId]) map[r.athleteId] = { id: r.athleteId, name: r.athleteId };
+      const cur = map[r.athleteId][r.event];
+      const isBetter = cur == null
+        || (r.event === 'dash'   ? r.value < cur : r.value > cur);
+      if (isBetter) map[r.athleteId][r.event] = r.value;
+    });
+
+    // Resolve names from dc_athletes
+    try {
+      const athletes = JSON.parse(localStorage.getItem('dc_athletes') || '[]');
+      athletes.forEach(a => {
+        if (map[a.athleteId]) map[a.athleteId].name = a.firstName + ' ' + a.lastName;
+      });
+    } catch(e) {}
+
+    // Build merged athlete list: real data first, then seed rows not overridden
+    const realIds = new Set(Object.keys(map));
+    const seedRows = DEMO_ATHLETES.filter(a => !realIds.has(a.id));
+    const realRows = Object.values(map).map(a => ({
+      id: a.id, name: a.name,
+      pullup: a.pullup ?? null,
+      dash:   a.dash   ?? null,
+      jump:   a.jump   ?? null
+    }));
+
+    return Promise.resolve([...realRows, ...seedRows]);
+  } catch(e) {
+    return Promise.resolve(DEMO_ATHLETES);
+  }
 }
 
 function refresh() {
-  fetchResults().then(() => {
+  fetchResults().then(athletes => {
+    scoreAll(athletes);
     renderOverall();
     renderPullup();
     renderDash();

@@ -165,6 +165,15 @@ function handleRegister(e) {
   // Persist to sessionStorage for confirm page
   try { sessionStorage.setItem('dc_registration', JSON.stringify(data)); } catch(err) {}
 
+  // Also persist to localStorage athletes store (shared with official + admin)
+  try {
+    const athletes = JSON.parse(localStorage.getItem('dc_athletes') || '[]');
+    // Avoid duplicates from re-registration
+    const existing = athletes.findIndex(a => a.email === data.email);
+    if (existing >= 0) athletes[existing] = data; else athletes.push(data);
+    localStorage.setItem('dc_athletes', JSON.stringify(athletes));
+  } catch(err) {}
+
   // Redirect to confirm
   window.location.href = `confirm.html?id=${athleteId}`;
 }
