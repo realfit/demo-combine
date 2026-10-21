@@ -537,9 +537,9 @@ function renderPullup() {
     <tr class="${a.pullup == null ? 'row-pending' : ''}">
       <td class="rank-cell ${i < 3 && a.pullup != null ? 'top' : ''}">${a.pullup != null ? i+1 : '—'}</td>
       <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}${a.age != null ? ' · ' + a.age + ' yrs' : ''}</div></td>
+      <td>${a.pullup != null ? fmt(a.pullup, ' reps') + statusBadge(a.pullupStatus) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
       <td class="score-cell">${a.ps != null ? fmtScore(a.ps) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
       <td>${a.ps != null ? fmtBand(a.ps) : '—'}</td>
-      <td>${a.pullup != null ? fmt(a.pullup, ' reps') + statusBadge(a.pullupStatus) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
     </tr>
   `).join('');
 }
@@ -552,9 +552,9 @@ function renderDash() {
     <tr class="${a.dash == null ? 'row-pending' : ''}">
       <td class="rank-cell ${i < 3 && a.dash != null ? 'top' : ''}">${a.dash != null ? i+1 : '—'}</td>
       <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}${a.age != null ? ' · ' + a.age + ' yrs' : ''}</div></td>
+      <td>${a.dash != null ? fmt(a.dash, ' sec') + statusBadge(a.dashStatus) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
       <td class="score-cell">${a.ds != null ? fmtScore(a.ds) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
       <td>${a.ds != null ? fmtBand(a.ds) : '—'}</td>
-      <td>${a.dash != null ? fmt(a.dash, ' sec') + statusBadge(a.dashStatus) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
     </tr>
   `).join('');
 }
@@ -567,9 +567,9 @@ function renderJump() {
     <tr class="${a.jump == null ? 'row-pending' : ''}">
       <td class="rank-cell ${i < 3 && a.jump != null ? 'top' : ''}">${a.jump != null ? i+1 : '—'}</td>
       <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}${a.age != null ? ' · ' + a.age + ' yrs' : ''}</div></td>
+      <td>${a.jump != null ? fmt(a.jump, '"') + statusBadge(a.jumpStatus) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
       <td class="score-cell">${a.js != null ? fmtScore(a.js) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
       <td>${a.js != null ? fmtBand(a.js) : '—'}</td>
-      <td>${a.jump != null ? fmt(a.jump, '"') + statusBadge(a.jumpStatus) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
     </tr>
   `).join('');
 }
