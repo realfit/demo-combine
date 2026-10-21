@@ -1041,9 +1041,10 @@ async function saveOfficial() {
   } else {
     ({ error } = await sb.from('dc_officials').insert({ event_id: EVENT_ID, name, passcode }));
   }
-  if (error) { alert('Save failed: ' + error.message); return; }
+  if (error) { alert('Save failed: ' + JSON.stringify(error)); return; }
   closeOfficialModal();
   await reloadData();
+  console.log('dc_officials after save:', _cachedOfficials);
   renderOfficials();
 }
 
