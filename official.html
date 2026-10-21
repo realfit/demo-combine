@@ -228,10 +228,15 @@
 <div id="login-screen">
   <div class="login-card">
     <div style="font-family:var(--display);font-size:1.4rem;font-weight:900;margin-bottom:4px;">Official Access</div>
-    <p>Enter the event passcode to continue.</p>
-    <input type="password" id="passcode" placeholder="Passcode" onkeydown="if(event.key==='Enter')doLogin()">
+    <p>Enter the event passcode and your official ID.</p>
+    <input type="password" id="passcode" placeholder="Event passcode"
+           onkeydown="if(event.key==='Enter')document.getElementById('officialIdInput').focus()"
+           style="margin-bottom:10px;">
+    <input type="text" id="officialIdInput" placeholder="Your name or ID (e.g. J. Martinez)"
+           onkeydown="if(event.key==='Enter')doLogin()"
+           style="margin-bottom:14px;">
     <button onclick="doLogin()">Enter →</button>
-    <div class="login-error" id="login-error">Incorrect passcode. Try again.</div>
+    <div class="login-error" id="login-error">Incorrect passcode or missing ID.</div>
   </div>
 </div>
 
@@ -241,7 +246,10 @@
     <div style="font-size:0.65rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:2px;">ScoreMyCombine</div>
     <h1>Official Result Entry</h1>
   </div>
-  <span class="official-badge">Certified Official</span>
+  <div style="text-align:right;">
+    <span class="official-badge">Certified Official</span>
+    <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:4px;">Signed in as <span id="officialLabel">—</span></div>
+  </div>
 </div>
 
 <!-- Main panel -->
@@ -426,6 +434,7 @@ function persistAttempt(athleteId, eventId, attemptNum, value) {
     attemptNum,
     value,
     score: calcScore(eventId, value),
+    officialId: currentOfficialId,
     timestamp: new Date().toISOString(),
     voided: false
   });
@@ -443,10 +452,16 @@ let attempts = {};
 // AUTH
 // ════════════════════════════════════════════
 const PASSCODE = 'realfit2026';
+let currentOfficialId = '';
 
 function doLogin() {
-  if (document.getElementById('passcode').value === PASSCODE) {
+  const pass = document.getElementById('passcode').value;
+  const oid  = document.getElementById('officialIdInput').value.trim();
+  if (pass === PASSCODE && oid.length > 0) {
+    currentOfficialId = oid;
     document.getElementById('login-screen').style.display = 'none';
+    // Show official ID in header
+    document.getElementById('officialLabel').textContent = oid;
     initScanner();
   } else {
     document.getElementById('login-error').style.display = 'block';

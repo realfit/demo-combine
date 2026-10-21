@@ -264,6 +264,7 @@
             <th>Attempt</th>
             <th>Value</th>
             <th>Score</th>
+            <th>Official</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -300,6 +301,7 @@
             <th>#</th>
             <th>Value</th>
             <th>Score</th>
+            <th>Official</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -494,6 +496,7 @@ function renderRecent() {
       <td>#${r.attemptNum}</td>
       <td><strong>${r.value}</strong> ${EVENT_UNITS[r.event]}</td>
       <td>${r.score ?? '—'}</td>
+      <td class="ts">${r.officialId || '<span style="color:#d1d5db">—</span>'}</td>
       <td>${r.voided
         ? '<span style="color:#dc2626;font-weight:700;font-size:0.72rem;">Voided</span>'
         : '<span style="color:#16a34a;font-weight:700;font-size:0.72rem;">Active</span>'}</td>
@@ -528,6 +531,7 @@ function renderResults() {
       <td>#${r.attemptNum}</td>
       <td><strong>${r.value}</strong> ${EVENT_UNITS[r.event]}</td>
       <td>${r.score ?? '—'}</td>
+      <td class="ts">${r.officialId || '<span style="color:#d1d5db">—</span>'}</td>
       <td style="white-space:nowrap;">
         ${!r.voided
           ? `<button class="btn-edit" onclick="openEdit(${i})">Edit</button>
@@ -689,8 +693,8 @@ function exportCSV(type) {
 
   if (type === 'results') {
     const csv = toCSV(
-      results.map(r => [r.athleteId, athleteName(r.athleteId), r.event, r.attemptNum, r.value, r.score, r.timestamp]),
-      ['athlete_id','name','event','attempt_num','value','score','timestamp']
+      results.map(r => [r.athleteId, athleteName(r.athleteId), r.event, r.attemptNum, r.value, r.score, r.officialId || '', r.timestamp]),
+      ['athlete_id','name','event','attempt_num','value','score','official_id','timestamp']
     );
     downloadCSV(csv, `dc-results-${date}.csv`);
   } else if (type === 'bests') {
