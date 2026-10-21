@@ -598,7 +598,7 @@ function switchTab(panel, btn) {
 // ── Live refresh ──
 // When Supabase is connected, replace fetchResults() with a real query.
 // The render pipeline stays the same.
-const REFRESH_INTERVAL_MS = 30000; // 30 seconds
+const REFRESH_INTERVAL_MS = 5000; // 5 seconds — fallback polling if Realtime unavailable
 
 async function fetchResults() {
   // ── Supabase fetch ──
@@ -695,9 +695,13 @@ function refresh() {
 // Subscribe to inserts on dc_results and dc_athletes for this event.
 // Any change triggers an immediate refresh — no polling needed.
 function initRealtime() {
+  // Always poll as safety net — 5s feels near-real-time for a live event
+  setInterval(refresh, REFRESH_INTERVAL_MS);
+
+  // Also try Realtime for instant updates (requires Supabase Pro + REPLICA IDENTITY FULL)
   try {
     const sb = getSB();
-    const channel = sb.channel(`scoreboard-${EVENT_ID}`)
+    sb.channel(`scoreboard-${EVENT_ID}`)
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'dc_results'
       }, () => { console.log('Realtime: dc_results change'); refresh(); })
@@ -706,14 +710,9 @@ function initRealtime() {
       }, () => { console.log('Realtime: dc_athletes change'); refresh(); })
       .subscribe((status) => {
         console.log('Realtime status:', status);
-        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.warn('Realtime failed, falling back to polling');
-          setInterval(refresh, REFRESH_INTERVAL_MS);
-        }
       });
   } catch(e) {
-    console.warn('Realtime unavailable, falling back to polling:', e);
-    setInterval(refresh, REFRESH_INTERVAL_MS);
+    console.warn('Realtime subscribe error:', e);
   }
 }
 
