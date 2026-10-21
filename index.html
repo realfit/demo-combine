@@ -1,160 +1,657 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>REALFIT Demo Combine · ScoreMyCombine</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
+<title>Demo Combine</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap">
+
+<style>
+/* ── Layout: full-width hero → three role cards → scoreboard CTA ── */
+:root {
+  --bg: #f5f5f4;
+  --bg-card: #ffffff;
+  --fg: #0d0d0d;
+  --fg-mid: #4b5563;
+  --fg-muted: #9ca3af;
+  --accent: #2563eb;
+  --accent-light: #dbeafe;
+  --border: #e5e7eb;
+  --hero-bg: #0d0d0d;
+  --hero-fg: #ffffff;
+
+  --display: 'Barlow Condensed', system-ui, sans-serif;
+  --body: 'DM Sans', system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111111;
+    --bg-card: #1c1c1c;
+    --fg: #f5f5f4;
+    --fg-mid: #9ca3af;
+    --fg-muted: #6b7280;
+    --accent: #3b82f6;
+    --accent-light: #1e3a5f;
+    --border: #2a2a2a;
+    --hero-bg: #000000;
+    --hero-fg: #ffffff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111111;
+  --bg-card: #1c1c1c;
+  --fg: #f5f5f4;
+  --fg-mid: #9ca3af;
+  --fg-muted: #6b7280;
+  --accent: #3b82f6;
+  --accent-light: #1e3a5f;
+  --border: #2a2a2a;
+  --hero-bg: #000000;
+  --hero-fg: #ffffff;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--body);
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ── Nav ── */
+.nav {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 10;
+  background: var(--hero-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: 14px;
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 11;
+  background: var(--hero-bg);
+}
+.nav-logo {
+  font-family: var(--display);
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--hero-fg);
+  letter-spacing: -0.01em;
+}
+.nav-logo span { color: var(--accent); }
+.nav-links {
+  display: flex;
+  gap: 20px;
+  list-style: none;
+}
+.nav-links a {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.65);
+  transition: color 0.15s;
+}
+.nav-links a:hover { color: #fff; }
+.nav-links .live-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  background: #22c55e;
+  border-radius: 50%;
+  margin-right: 5px;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ── Hero ── */
+.hero {
+  background: var(--hero-bg);
+  color: var(--hero-fg);
+  padding-block: 72px 64px;
+  padding-left: max(24px, env(safe-area-inset-left, 0px));
+  padding-right: max(24px, env(safe-area-inset-right, 0px));
+  text-align: center;
+}
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 18px;
+}
+.hero-eyebrow .dot {
+  width: 7px; height: 7px;
+  background: #22c55e;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+.hero h1 {
+  font-family: var(--display);
+  font-size: clamp(3rem, 10vw, 5.5rem);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  margin-bottom: 20px;
+}
+.hero h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+.hero-sub {
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
+  color: rgba(255,255,255,0.55);
+  max-width: 480px;
+  margin: 0 auto 36px;
+  line-height: 1.6;
+}
+.hero-events {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+.event-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 100px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.05);
+}
+.event-badge .pct {
+  color: var(--accent);
+  font-weight: 700;
+}
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  border-radius: 6px;
+  transition: opacity 0.15s;
+}
+.hero-cta:hover { opacity: 0.88; }
+
+/* ── Section wrapper ── */
+.section {
+  padding-block: 64px;
+  padding-left: max(24px, env(safe-area-inset-left, 0px));
+  padding-right: max(24px, env(safe-area-inset-right, 0px));
+}
+.section-inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+.section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.section h2 {
+  font-family: var(--display);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  margin-bottom: 40px;
+}
+
+/* ── Role cards ── */
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+@media (max-width: 680px) {
+  .role-grid { grid-template-columns: 1fr; }
+}
+.role-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.role-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 24px rgba(37,99,235,0.1);
+}
+.role-icon {
+  font-size: 1.8rem;
+  margin-bottom: 14px;
+  line-height: 1;
+}
+.role-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-bottom: 6px;
+}
+.role-title {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  margin-bottom: 10px;
+}
+.role-desc {
+  font-size: 0.85rem;
+  color: var(--fg-mid);
+  line-height: 1.6;
+  flex: 1;
+  margin-bottom: 22px;
+}
+.role-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.role-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 7px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: background 0.12s;
+}
+.role-link.primary {
+  background: var(--accent);
+  color: #fff;
+}
+.role-link.primary:hover { opacity: 0.88; }
+.role-link.secondary {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+.role-link.secondary:hover { opacity: 0.8; }
+.role-link .arrow { font-size: 0.9rem; }
+
+/* ── How it works ── */
+.how-bg {
+  background: var(--hero-bg);
+  color: var(--hero-fg);
+}
+.how-bg .section-label { color: var(--accent); }
+.how-bg .section h2 { color: var(--hero-fg); }
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+@media (max-width: 680px) {
+  .steps { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 400px) {
+  .steps { grid-template-columns: 1fr; }
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.step-num {
+  font-family: var(--display);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+.step-title {
+  font-family: var(--display);
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: var(--hero-fg);
+  line-height: 1.15;
+}
+.step-desc {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.6;
+}
+.step-divider {
+  width: 32px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+}
+
+/* ── Scoreboard CTA ── */
+.sb-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background: var(--accent-light);
+  border: 1.5px solid var(--accent);
+  border-radius: 12px;
+  padding: 28px 32px;
+  flex-wrap: wrap;
+}
+.sb-cta-left { display: flex; flex-direction: column; gap: 4px; }
+.sb-live {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.sb-live .dot {
+  width: 7px; height: 7px;
+  background: #22c55e;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+.sb-title {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--fg);
+  letter-spacing: -0.01em;
+}
+.sb-sub {
+  font-size: 0.82rem;
+  color: var(--fg-mid);
+}
+.sb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 12px 22px;
+  border-radius: 7px;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.sb-btn:hover { opacity: 0.88; }
+
+/* ── Scoring strip ── */
+.scoring-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 40px;
+}
+@media (max-width: 560px) {
+  .scoring-strip { grid-template-columns: 1fr; }
+}
+.scoring-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 20px;
+}
+.scoring-event {
+  font-family: var(--display);
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--hero-fg);
+  margin-bottom: 4px;
+}
+.scoring-weight {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.scoring-anchor {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.anchor-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.4);
+  font-variant-numeric: tabular-nums;
+}
+.anchor-row span:last-child { color: rgba(255,255,255,0.65); font-weight: 600; }
+.anchor-bar {
+  height: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  margin: 6px 0;
+  position: relative;
+  overflow: hidden;
+}
+.anchor-bar::after {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 65%;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* ── Footer ── */
+footer {
+  background: var(--hero-bg);
+  color: rgba(255,255,255,0.4);
+  font-size: 0.78rem;
+  text-align: center;
+  padding-block: 32px;
+  padding-left: max(24px, env(safe-area-inset-left, 0px));
+  padding-right: max(24px, env(safe-area-inset-right, 0px));
+  line-height: 1.8;
+}
+footer a { color: rgba(255,255,255,0.5); }
+footer a:hover { color: #fff; }
+.footer-logo {
+  font-family: var(--display);
+  font-size: 1rem;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.footer-logo span { color: var(--accent); }
+</style>
 
 <!-- Nav -->
-<nav>
+<nav class="nav">
   <div class="nav-logo">Score<span>My</span>Combine</div>
   <ul class="nav-links">
-    <li><a href="index.html" class="active">Home</a></li>
-    <li><a href="scoreboard.html">Scoreboard</a></li>
-    <li><a href="register.html" class="nav-cta">Register</a></li>
+    <li><a href="https://demo.scoremycombine.com/scoreboard.html"><span class="live-dot"></span>Scoreboard</a></li>
+    <li><a href="https://demo.scoremycombine.com/register.html">Register</a></li>
+    <li><a href="https://scoremycombine.com">Main Site</a></li>
   </ul>
 </nav>
 
 <!-- Hero -->
 <section class="hero">
-  <div class="hero-eyebrow">REALFIT Demo Combine</div>
-  <h1>Three Tests.<br><span>One Score.</span></h1>
-  <p class="hero-sub">Pull-ups. 40-yard dash. Broad jump. Compete, get scored on the 0–1000 REALFIT scale, and see where you stack up.</p>
-  <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
-    <a href="register.html" class="btn-primary">Register Now</a>
-    <a href="scoreboard.html" class="btn-secondary">View Scoreboard</a>
+  <div class="hero-eyebrow">
+    <span class="dot"></span>
+    Demo Combine · Live Now
   </div>
+  <h1>REALFIT<br><em>Demo</em><br>Combine</h1>
+  <p class="hero-sub">Three events. One composite score. See the full ScoreMyCombine platform in action — register, compete, and watch results appear on the live scoreboard in real time.</p>
+  <div class="hero-events">
+    <div class="event-badge">💪 Pull-Ups <span class="pct">33%</span></div>
+    <div class="event-badge">⚡ 40-Yard Dash <span class="pct">33%</span></div>
+    <div class="event-badge">🦵 Broad Jump <span class="pct">34%</span></div>
+  </div>
+  <a class="hero-cta" href="https://demo.scoremycombine.com/register.html">Register Now →</a>
 </section>
 
-<!-- Event strip -->
-<div class="event-strip">
-  <div class="event-strip-item">
-    <div class="label">Format</div>
-    <div class="value">Open Division</div>
-  </div>
-  <div class="event-strip-item">
-    <div class="label">Tests</div>
-    <div class="value">3 Events</div>
-  </div>
-  <div class="event-strip-item">
-    <div class="label">Scoring</div>
-    <div class="value">0–1000 Scale</div>
-  </div>
-  <div class="event-strip-item">
-    <div class="label">Platform</div>
-    <div class="value">FITDAT v1.1</div>
-  </div>
-</div>
-
-<!-- Challenges section -->
-<div class="challenges-intro">
-  <div class="container">
-    <div class="section-label">The Events</div>
-    <h2 style="color:var(--white);margin-bottom:12px;">Enter any one or all three</h2>
-    <p style="color:rgba(255,255,255,0.6);max-width:520px;margin:0 auto;font-size:1rem;">Each event is scored independently on the 0–1000 scale, then combined into a single Demo Combine Score (DCS).</p>
-  </div>
-</div>
-
-<div class="challenges-cards">
-  <div class="cards-grid">
-
-    <div class="ch-card">
-      <div class="ch-card-top">
-        <div class="ch-card-label">
-          <span class="ch-sport-tag">💪 Strength</span>
-          <span class="ch-name">Pull-Ups</span>
-        </div>
-        <div class="ch-target-block">
-          <span class="ch-target">33</span>
-          <span class="ch-unit">% weight</span>
-        </div>
-      </div>
-      <div class="ch-divider"></div>
-      <p class="ch-desc">Dead-hang pull-ups to max reps. Overhand grip, full extension at the bottom, chin clears bar at the top. No kipping.</p>
-      <div class="ch-footer">
-        <span class="ch-weight">33% of DCS</span>
-        <span class="ch-attempts">max reps · one attempt</span>
-      </div>
-    </div>
-
-    <div class="ch-card">
-      <div class="ch-card-top">
-        <div class="ch-card-label">
-          <span class="ch-sport-tag">⚡ Speed</span>
-          <span class="ch-name">40-Yard Dash</span>
-        </div>
-        <div class="ch-target-block">
-          <span class="ch-target">33</span>
-          <span class="ch-unit">% weight</span>
-        </div>
-      </div>
-      <div class="ch-divider"></div>
-      <p class="ch-desc">Standing-start sprint over 40 yards on flat surface. Electronic timing required. Best of two attempts. The gold standard of explosive speed.</p>
-      <div class="ch-footer">
-        <span class="ch-weight">33% of DCS</span>
-        <span class="ch-attempts">best of 2 · seconds</span>
-      </div>
-    </div>
-
-    <div class="ch-card">
-      <div class="ch-card-top">
-        <div class="ch-card-label">
-          <span class="ch-sport-tag">🦵 Power</span>
-          <span class="ch-name">Broad Jump</span>
-        </div>
-        <div class="ch-target-block">
-          <span class="ch-target">34</span>
-          <span class="ch-unit">% weight</span>
-        </div>
-      </div>
-      <div class="ch-divider"></div>
-      <p class="ch-desc">Standing broad jump (two-foot takeoff). Measured from takeoff line to nearest heel at landing. Best of two attempts.</p>
-      <div class="ch-footer">
-        <span class="ch-weight">34% of DCS</span>
-        <span class="ch-attempts">best of 2 · inches</span>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- How scoring works -->
+<!-- Role cards -->
 <section class="section">
-  <div class="container">
-    <div class="section-label">Scoring</div>
-    <h2>The REALFIT 0–1000 Scale</h2>
-    <p class="section-body" style="margin-bottom:36px;">Each event is mapped to a 0–1000 score using population-neutral anchor points. Your three event scores combine into a single Demo Combine Score (DCS) — a mini version of the full REALFIT Absolute Score.</p>
+  <div class="section-inner">
+    <div class="section-label">Get started</div>
+    <h2>Three roles, one platform</h2>
+    <div class="role-grid">
 
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;max-width:760px;">
-      <div style="background:var(--gray-light);border-radius:var(--radius);padding:20px;">
-        <div style="font-family:var(--display);font-size:2rem;font-weight:900;color:var(--accent);">400–549</div>
-        <div style="font-size:0.8rem;font-weight:700;color:var(--gray);margin-top:4px;">Average</div>
-        <div style="font-size:0.82rem;color:var(--gray);margin-top:6px;">A solid recreational athlete hitting all three events.</div>
+      <div class="role-card">
+        <div class="role-icon">🏃</div>
+        <div class="role-tag">Athlete</div>
+        <div class="role-title">Register</div>
+        <p class="role-desc">Sign up, select your events, and get your athlete ID and QR code. Show it on combine day — officials scan you in instantly.</p>
+        <div class="role-links">
+          <a class="role-link primary" href="https://demo.scoremycombine.com/register.html">
+            Register for the combine <span class="arrow">→</span>
+          </a>
+          <a class="role-link secondary" href="https://demo.scoremycombine.com/scoreboard.html">
+            View scoreboard <span class="arrow">→</span>
+          </a>
+        </div>
       </div>
-      <div style="background:var(--gray-light);border-radius:var(--radius);padding:20px;">
-        <div style="font-family:var(--display);font-size:2rem;font-weight:900;color:var(--accent);">700–819</div>
-        <div style="font-size:0.8rem;font-weight:700;color:var(--gray);margin-top:4px;">Well Above Average</div>
-        <div style="font-size:0.82rem;color:var(--gray);margin-top:6px;">Competitive athlete with serious conditioning.</div>
+
+      <div class="role-card">
+        <div class="role-icon">📋</div>
+        <div class="role-tag">Official</div>
+        <div class="role-title">Enter Results</div>
+        <p class="role-desc">Scan an athlete's QR code, enter their result for each attempt, and move to the next. All entries are timestamped and attributed to your official ID.</p>
+        <div class="role-links">
+          <a class="role-link primary" href="https://demo.scoremycombine.com/official.html">
+            Open official entry <span class="arrow">→</span>
+          </a>
+        </div>
       </div>
-      <div style="background:var(--gray-light);border-radius:var(--radius);padding:20px;">
-        <div style="font-family:var(--display);font-size:2rem;font-weight:900;color:var(--accent);">920+</div>
-        <div style="font-size:0.8rem;font-weight:700;color:var(--gray);margin-top:4px;">Elite</div>
-        <div style="font-size:0.82rem;color:var(--gray);margin-top:6px;">Sub-4.5 dash, 20+ pull-ups, 10-foot jump territory.</div>
+
+      <div class="role-card">
+        <div class="role-icon">⚙️</div>
+        <div class="role-tag">Admin</div>
+        <div class="role-title">Manage Results</div>
+        <p class="role-desc">View all logged attempts, edit values, void bad entries, track athlete completion, and export results to CSV. Full audit trail with official attribution.</p>
+        <div class="role-links">
+          <a class="role-link primary" href="https://demo.scoremycombine.com/admin.html">
+            Open admin panel <span class="arrow">→</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="how-bg">
+  <div class="section section-inner">
+    <div class="section-label">How it works</div>
+    <h2>From QR scan to<br>live scoreboard</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-divider"></div>
+        <div class="step-title">Athlete registers</div>
+        <p class="step-desc">Fills out the form, gets a unique ID and QR code with their name baked in.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-divider"></div>
+        <div class="step-title">Official scans QR</div>
+        <p class="step-desc">Points phone at the athlete's QR. Name and ID load instantly — no lookup needed.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-divider"></div>
+        <div class="step-title">Results entered</div>
+        <p class="step-desc">Official logs each attempt. System scores it 0–100 using FITDAT anchor-point math.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-divider"></div>
+        <div class="step-title">Scoreboard updates</div>
+        <p class="step-desc">Composite DCS score appears live. Athletes with all three events rank at the top.</p>
+      </div>
+    </div>
+
+    <div class="scoring-strip">
+      <div class="scoring-card">
+        <div class="scoring-event">💪 Pull-Ups</div>
+        <div class="scoring-weight">33% weight · Higher is better</div>
+        <div class="anchor-bar"></div>
+        <div class="scoring-anchor">
+          <div class="anchor-row"><span>Score 0</span><span>0 reps</span></div>
+          <div class="anchor-row"><span>Score 100</span><span>30 reps</span></div>
+        </div>
+      </div>
+      <div class="scoring-card">
+        <div class="scoring-event">⚡ 40-Yard Dash</div>
+        <div class="scoring-weight">33% weight · Lower is better</div>
+        <div class="anchor-bar"></div>
+        <div class="scoring-anchor">
+          <div class="anchor-row"><span>Score 0</span><span>6.5 sec</span></div>
+          <div class="anchor-row"><span>Score 100</span><span>4.3 sec</span></div>
+        </div>
+      </div>
+      <div class="scoring-card">
+        <div class="scoring-event">🦵 Broad Jump</div>
+        <div class="scoring-weight">34% weight · Higher is better</div>
+        <div class="anchor-bar"></div>
+        <div class="scoring-anchor">
+          <div class="anchor-row"><span>Score 0</span><span>60 in</span></div>
+          <div class="anchor-row"><span>Score 100</span><span>130 in</span></div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- CTA -->
-<section class="section section-dark" style="text-align:center;">
-  <div class="container">
-    <div class="section-label">Ready?</div>
-    <h2 style="color:var(--white);margin-bottom:16px;">Find out where you stand.</h2>
-    <p style="color:rgba(255,255,255,0.6);max-width:440px;margin:0 auto 32px;font-size:1rem;">Register, get your athlete ID and QR code, and show up ready to compete.</p>
-    <a href="register.html" class="btn-primary">Register for the Demo Combine</a>
+<!-- Scoreboard CTA -->
+<section class="section">
+  <div class="section-inner">
+    <div class="sb-cta">
+      <div class="sb-cta-left">
+        <div class="sb-live"><span class="dot"></span> Live scoreboard</div>
+        <div class="sb-title">Watch results come in</div>
+        <div class="sb-sub">Updates every 30 seconds. Rankings recalculate as new results are entered.</div>
+      </div>
+      <a class="sb-btn" href="https://demo.scoremycombine.com/scoreboard.html">Open Scoreboard →</a>
+    </div>
   </div>
 </section>
 
@@ -162,7 +659,10 @@
 <footer>
   <div class="footer-logo">Score<span>My</span>Combine</div>
   <p>A <a href="https://realfit.com">REALFIT</a> platform · Powered by <a href="https://fitdat.com">FITDAT</a></p>
+  <p style="margin-top:6px;">
+    <a href="https://demo.scoremycombine.com/register.html">Register</a> ·
+    <a href="https://demo.scoremycombine.com/scoreboard.html">Scoreboard</a> ·
+    <a href="https://demo.scoremycombine.com/official.html">Official</a> ·
+    <a href="https://demo.scoremycombine.com/admin.html">Admin</a>
+  </p>
 </footer>
-
-</body>
-</html>
