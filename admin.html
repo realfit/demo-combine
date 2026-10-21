@@ -601,6 +601,7 @@ async function reloadData() {
   if (!rErr) _cachedResults   = rRows  || [];
   if (!aErr) _cachedAthletes  = aRows  || [];
   if (!oErr) _cachedOfficials = oRows  || [];
+  console.log('reloadData: officials', oErr || _cachedOfficials);
 }
 
 function loadResults()   { return _cachedResults; }
