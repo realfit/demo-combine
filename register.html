@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Register · REALFIT Demo Combine</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+  <script src="supabase-client.js"></script>
 </head>
 <body>
 
@@ -138,43 +140,55 @@ function highlightEvent(checkbox) {
   }
 }
 
-function handleRegister(e) {
+async function handleRegister(e) {
   e.preventDefault();
   const form = e.target;
-  const data = {
-    firstName: form.firstName.value.trim(),
-    lastName: form.lastName.value.trim(),
-    email: form.email.value.trim(),
-    dob: form.dob.value,
-    gender: form.gender.value,
-    events: [...form.querySelectorAll('[name="events"]:checked')].map(c => c.value),
-    registeredAt: new Date().toISOString()
-  };
+  const btn = form.querySelector('button[type="submit"]');
 
-  if (data.events.length === 0) {
+  const selectedEvents = [...form.querySelectorAll('[name="events"]:checked')].map(c => c.value);
+  if (selectedEvents.length === 0) {
     alert('Please select at least one event.');
     return;
   }
 
   // Generate athlete ID: DC26-NNNN
   const year = new Date().getFullYear().toString().slice(-2);
-  const num = String(Math.floor(1000 + Math.random() * 9000));
-  const athleteId = `DC${year}-${num}`;
-  data.athleteId = athleteId;
+  const athleteId = `DC${year}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  const data = {
+    firstName: form.firstName.value.trim(),
+    lastName:  form.lastName.value.trim(),
+    email:     form.email.value.trim(),
+    dob:       form.dob.value,
+    gender:    form.gender.value,
+    events:    selectedEvents,
+    athleteId
+  };
 
   // Persist to sessionStorage for confirm page
   try { sessionStorage.setItem('dc_registration', JSON.stringify(data)); } catch(err) {}
 
-  // Also persist to localStorage athletes store (shared with official + admin)
+  // ── Supabase insert ──
+  btn.textContent = 'Registering…';
+  btn.disabled = true;
   try {
-    const athletes = JSON.parse(localStorage.getItem('dc_athletes') || '[]');
-    // Avoid duplicates from re-registration
-    const existing = athletes.findIndex(a => a.email === data.email);
-    if (existing >= 0) athletes[existing] = data; else athletes.push(data);
-    localStorage.setItem('dc_athletes', JSON.stringify(athletes));
-  } catch(err) {}
+    const sb = getSB();
+    const { error } = await sb.from('dc_athletes').insert({
+      event_id:   EVENT_ID,
+      athlete_id: athleteId,
+      first_name: data.firstName,
+      last_name:  data.lastName,
+      email:      data.email,
+      dob:        data.dob || null,
+      gender:     data.gender,
+      events:     selectedEvents
+    });
+    if (error) throw error;
+  } catch (err) {
+    console.warn('Supabase registration error:', err);
+    // Still redirect — confirm page has the data in sessionStorage
+  }
 
-  // Redirect to confirm
   window.location.href = `confirm.html?id=${athleteId}`;
 }
 </script>

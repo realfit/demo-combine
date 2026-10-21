@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Official App · REALFIT Demo Combine</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+  <script src="supabase-client.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
   <style>
     body { background: var(--gray-light); }
@@ -428,33 +430,22 @@ function bestAttempt(eventId, attempts) {
 }
 
 // ════════════════════════════════════════════
-// LOCALSTORAGE DATA LAYER
-// Shared with admin.html and scoreboard.html
+// SUPABASE DATA LAYER
 // ════════════════════════════════════════════
-const LS_RESULTS = 'dc_results';       // array of attempt records
-const LS_ATHLETES = 'dc_athletes';     // array of registered athletes
-
-function loadResults() {
-  try { return JSON.parse(localStorage.getItem(LS_RESULTS) || '[]'); } catch(e) { return []; }
-}
-function saveResults(records) {
-  try { localStorage.setItem(LS_RESULTS, JSON.stringify(records)); } catch(e) {}
-}
-function persistAttempt(athleteId, eventId, attemptNum, value) {
-  const records = loadResults();
-  records.push({
-    id: crypto.randomUUID(),
-    athleteId,
-    athleteName: currentAthleteName || athleteId,
-    event: eventId,
-    attemptNum,
-    value,
-    score: calcScore(eventId, value),
-    officialId: currentOfficialId,
-    timestamp: new Date().toISOString(),
-    voided: false
+async function persistAttempt(athleteId, eventId, attemptNum, value) {
+  const sb = getSB();
+  const { error } = await sb.from('dc_results').insert({
+    event_id:     EVENT_ID,
+    athlete_id:   athleteId,
+    athlete_name: currentAthleteName || athleteId,
+    event:        eventId,
+    attempt_num:  attemptNum,
+    value:        value,
+    score:        calcScore(eventId, value),
+    official_id:  currentOfficialId,
+    voided:       false
   });
-  saveResults(records);
+  if (error) console.error('persistAttempt error:', error);
 }
 
 // ════════════════════════════════════════════
@@ -539,7 +530,7 @@ function resetToScanner() {
 // ════════════════════════════════════════════
 // LOAD ATHLETE
 // ════════════════════════════════════════════
-function loadAthlete(id, scannedName) {
+async function loadAthlete(id, scannedName) {
   if (!id || !id.match(/^DC\d{2}-\d{4}$/i)) {
     alert('Invalid athlete ID format. Example: DC26-0042');
     return;
@@ -548,38 +539,42 @@ function loadAthlete(id, scannedName) {
   attempts = {};
   EVENT_CONFIG.forEach(e => attempts[e.id] = []);
 
-  // Restore any previously logged attempts for this athlete from localStorage
-  // so the official can return mid-event (e.g. second 40-yd dash run) and
-  // pick up exactly where they left off.
-  try {
-    const prior = loadResults().filter(r => r.athleteId === currentAthlete && !r.voided);
-    prior.forEach(r => {
-      if (attempts[r.event] !== undefined) {
-        attempts[r.event][r.attemptNum - 1] = r.value;
-      }
-    });
-    // Compact any gaps (shouldn't happen but be safe)
-    EVENT_CONFIG.forEach(e => {
-      attempts[e.id] = attempts[e.id].filter(v => v !== undefined);
-    });
-  } catch(e) {}
-
-  // Resolve athlete name — priority: QR scan > localStorage > sessionStorage > fallback
+  // ── Supabase: load athlete record + prior attempts in parallel ──
   let athleteName = scannedName || null;
   try {
-    // localStorage athletes store (populated on same device registration)
-    const athletes = JSON.parse(localStorage.getItem(LS_ATHLETES) || '[]');
-    const found = athletes.find(a => a.athleteId === currentAthlete);
-    if (found) athleteName = found.firstName + ' ' + found.lastName;
-    // sessionStorage (if official is on same device as registration)
-    if (!athleteName) {
-      const reg = JSON.parse(sessionStorage.getItem('dc_registration') || '{}');
-      if (reg.athleteId === currentAthlete && reg.firstName) {
-        athleteName = reg.firstName + ' ' + reg.lastName;
-      }
+    const sb = getSB();
+    const [{ data: athleteRows }, { data: priorRows }] = await Promise.all([
+      sb.from('dc_athletes')
+        .select('first_name,last_name')
+        .eq('event_id', EVENT_ID)
+        .eq('athlete_id', currentAthlete)
+        .limit(1),
+      sb.from('dc_results')
+        .select('event,attempt_num,value')
+        .eq('event_id', EVENT_ID)
+        .eq('athlete_id', currentAthlete)
+        .eq('voided', false)
+        .order('attempt_num', { ascending: true })
+    ]);
+
+    if (athleteRows && athleteRows.length) {
+      athleteName = `${athleteRows[0].first_name} ${athleteRows[0].last_name}`.trim();
     }
-  } catch(e) {}
-  if (!athleteName) athleteName = currentAthlete; // bare ID fallback
+    if (priorRows) {
+      priorRows.forEach(r => {
+        if (attempts[r.event] !== undefined) {
+          attempts[r.event][r.attempt_num - 1] = Number(r.value);
+        }
+      });
+      EVENT_CONFIG.forEach(e => {
+        attempts[e.id] = attempts[e.id].filter(v => v !== undefined);
+      });
+    }
+  } catch(e) {
+    console.warn('Supabase loadAthlete error:', e);
+  }
+
+  if (!athleteName) athleteName = currentAthlete;
   currentAthleteName = athleteName;
 
   document.getElementById('cardAthleteId').textContent = currentAthlete;

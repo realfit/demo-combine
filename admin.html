@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin · REALFIT Demo Combine</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+  <script src="supabase-client.js"></script>
   <style>
     body { background: var(--gray-light); }
 
@@ -362,7 +364,7 @@
     <button onclick="clearAllResults()" style="padding:10px 20px;background:#fef2f2;color:#dc2626;border:1.5px solid #fca5a5;border-radius:8px;font-weight:700;font-size:0.85rem;cursor:pointer;">
       🗑 Clear All Results
     </button>
-    <span style="font-size:0.75rem;color:var(--gray);margin-left:12px;">Removes all logged attempts from localStorage. Cannot be undone.</span>
+    <span style="font-size:0.75rem;color:var(--gray);margin-left:12px;">Voids all results in Supabase for this event. Cannot be undone.</span>
   </div>
 </div>
 
@@ -371,11 +373,13 @@
 // CONFIG
 // ══════════════════════════════════════════
 const ADMIN_PASSCODE = 'realfit2026admin';
-const LS_RESULTS  = 'dc_results';
-const LS_ATHLETES = 'dc_athletes';
 
 const EVENT_LABELS = { pullup: 'Pull-Ups', dash: '40-Yd Dash', jump: 'Broad Jump' };
 const EVENT_UNITS  = { pullup: 'reps', dash: 'sec', jump: 'in' };
+
+// ── In-memory cache (populated from Supabase on load + after mutations) ──
+let _cachedResults  = [];   // dc_results rows (snake_case from Supabase)
+let _cachedAthletes = [];   // dc_athletes rows
 
 // Scoring engine (mirrors official.html)
 const ANCHORS = {
@@ -424,25 +428,26 @@ function doLogin() {
 }
 
 // ══════════════════════════════════════════
-// DATA HELPERS
+// DATA HELPERS (Supabase-backed, cached)
 // ══════════════════════════════════════════
-function loadResults() {
-  try { return JSON.parse(localStorage.getItem(LS_RESULTS) || '[]'); } catch(e) { return []; }
+async function reloadData() {
+  const sb = getSB();
+  const [{ data: rRows, error: rErr }, { data: aRows, error: aErr }] = await Promise.all([
+    sb.from('dc_results').select('*').eq('event_id', EVENT_ID).order('timestamp', { ascending: false }),
+    sb.from('dc_athletes').select('*').eq('event_id', EVENT_ID).order('registered_at', { ascending: true })
+  ]);
+  if (!rErr) _cachedResults  = rRows  || [];
+  if (!aErr) _cachedAthletes = aRows  || [];
 }
-function saveResults(r) {
-  try { localStorage.setItem(LS_RESULTS, JSON.stringify(r)); } catch(e) {}
-}
-function loadAthletes() {
-  try { return JSON.parse(localStorage.getItem(LS_ATHLETES) || '[]'); } catch(e) { return []; }
-}
+
+function loadResults()  { return _cachedResults; }
+function loadAthletes() { return _cachedAthletes; }
+
 function athleteName(id) {
-  // First try dc_athletes store
-  const athletes = loadAthletes();
-  const a = athletes.find(a => a.athleteId === id);
-  if (a) return a.firstName + ' ' + a.lastName;
-  // Fall back to athleteName stamped on attempt records
-  const rec = loadResults().find(r => r.athleteId === id && r.athleteName && r.athleteName !== id);
-  return rec ? rec.athleteName : id;
+  const a = _cachedAthletes.find(a => a.athlete_id === id);
+  if (a) return `${a.first_name} ${a.last_name}`.trim();
+  const rec = _cachedResults.find(r => r.athlete_id === id && r.athlete_name && r.athlete_name !== id);
+  return rec ? rec.athlete_name : id;
 }
 function fmtTime(iso) {
   if (!iso) return '—';
@@ -475,13 +480,10 @@ function renderStats() {
   const results  = loadResults();
   const athletes = loadAthletes();
   const active   = results.filter(r => !r.voided);
-  const uniqueIds = new Set(active.map(r => r.athleteId));
-  const complete  = [...uniqueIds].filter(id => {
-    return ['pullup','dash','jump'].every(ev =>
-      active.some(r => r.athleteId === id && r.event === ev)
-    );
-  });
-
+  const uniqueIds = new Set(active.map(r => r.athlete_id));
+  const complete  = [...uniqueIds].filter(id =>
+    ['pullup','dash','jump'].every(ev => active.some(r => r.athlete_id === id && r.event === ev))
+  );
   document.getElementById('statBar').innerHTML = `
     <div class="stat-tile"><div class="val">${athletes.length}</div><div class="lbl">Registered</div></div>
     <div class="stat-tile"><div class="val">${uniqueIds.size}</div><div class="lbl">With Results</div></div>
@@ -493,7 +495,7 @@ function renderStats() {
 
 // ── Recent ──
 function renderRecent() {
-  const results = loadResults().slice().reverse().slice(0, 20);
+  const results = loadResults().slice(0, 20); // already ordered desc by timestamp
   const tbody = document.getElementById('tbody-recent');
   if (!results.length) {
     tbody.innerHTML = '<tr><td colspan="9" class="empty-notice">No activity yet.</td></tr>';
@@ -502,13 +504,13 @@ function renderRecent() {
   tbody.innerHTML = results.map(r => `
     <tr class="${r.voided ? 'voided' : ''}">
       <td class="ts">${fmtTime(r.timestamp)}</td>
-      <td class="mono">${r.athleteId}</td>
-      <td>${athleteName(r.athleteId)}</td>
+      <td class="mono">${r.athlete_id}</td>
+      <td>${athleteName(r.athlete_id)}</td>
       <td>${EVENT_LABELS[r.event] || r.event}</td>
-      <td>#${r.attemptNum}</td>
+      <td>#${r.attempt_num}</td>
       <td><strong>${r.value}</strong> ${EVENT_UNITS[r.event]}</td>
       <td>${r.score ?? '—'}</td>
-      <td class="ts">${r.officialId || '<span style="color:#d1d5db">—</span>'}</td>
+      <td class="ts">${r.official_id || '<span style="color:#d1d5db">—</span>'}</td>
       <td>${r.voided
         ? '<span style="color:#dc2626;font-weight:700;font-size:0.72rem;">Voided</span>'
         : '<span style="color:#16a34a;font-weight:700;font-size:0.72rem;">Active</span>'}</td>
@@ -532,28 +534,25 @@ function renderResults() {
   }
   empty.style.display = 'none';
 
-  tbody.innerHTML = results.map((r, i) => {
-    const origIdx = loadResults().indexOf(r); // index into full array
-    return `
+  tbody.innerHTML = results.map((r, i) => `
     <tr class="${r.voided ? 'voided' : ''}" id="row-${i}">
       <td class="mono" style="font-size:0.72rem;color:var(--gray);" title="${r.id || '—'}">${r.id ? r.id.slice(0,8) : '—'}</td>
       <td class="ts">${fmtTime(r.timestamp)}</td>
-      <td class="mono">${r.athleteId}</td>
-      <td>${athleteName(r.athleteId)}</td>
+      <td class="mono">${r.athlete_id}</td>
+      <td>${athleteName(r.athlete_id)}</td>
       <td>${EVENT_LABELS[r.event] || r.event}</td>
-      <td>#${r.attemptNum}</td>
+      <td>#${r.attempt_num}</td>
       <td><strong>${r.value}</strong> ${EVENT_UNITS[r.event]}</td>
       <td>${r.score ?? '—'}</td>
-      <td class="ts">${r.officialId || '<span style="color:#d1d5db">—</span>'}</td>
+      <td class="ts">${r.official_id || '<span style="color:#d1d5db">—</span>'}</td>
       <td style="white-space:nowrap;">
         ${!r.voided
           ? `<button class="btn-edit" onclick="openEdit(${i})">Edit</button>
-             <button class="btn-void" style="margin-left:4px;" onclick="voidResult(${i})">Void</button>`
-          : `<button class="btn-restore" onclick="restoreResult(${i})">Restore</button>`
+             <button class="btn-void" style="margin-left:4px;" onclick="voidResult('${r.id}')">Void</button>`
+          : `<button class="btn-restore" onclick="restoreResult('${r.id}')">Restore</button>`
         }
       </td>
-    </tr>`;
-  }).join('');
+    </tr>`).join('');
 }
 
 // ── Athletes ──
@@ -571,26 +570,24 @@ function renderAthletes() {
   empty.style.display = 'none';
 
   tbody.innerHTML = athletes.map(a => {
-    const myResults = results.filter(r => r.athleteId === a.athleteId);
+    const myResults = results.filter(r => r.athlete_id === a.athlete_id);
     const hasPullup = myResults.some(r => r.event === 'pullup');
     const hasDash   = myResults.some(r => r.event === 'dash');
     const hasJump   = myResults.some(r => r.event === 'jump');
-    const bestPullup = hasPullup ? Math.max(...myResults.filter(r=>r.event==='pullup').map(r=>r.value)) : null;
-    const bestDash   = hasDash   ? Math.min(...myResults.filter(r=>r.event==='dash').map(r=>r.value))   : null;
-    const bestJump   = hasJump   ? Math.max(...myResults.filter(r=>r.event==='jump').map(r=>r.value))   : null;
+    const bestPullup = hasPullup ? Math.max(...myResults.filter(r=>r.event==='pullup').map(r=>Number(r.value))) : null;
+    const bestDash   = hasDash   ? Math.min(...myResults.filter(r=>r.event==='dash').map(r=>Number(r.value)))   : null;
+    const bestJump   = hasJump   ? Math.max(...myResults.filter(r=>r.event==='jump').map(r=>Number(r.value)))   : null;
     const allDone = hasPullup && hasDash && hasJump;
     const anyDone = hasPullup || hasDash || hasJump;
     const statusPill = allDone
       ? '<span class="pill-complete">Complete</span>'
-      : anyDone
-        ? '<span class="pill-partial">In Progress</span>'
-        : '<span class="pill-pending">Pending</span>';
+      : anyDone ? '<span class="pill-partial">In Progress</span>'
+                : '<span class="pill-pending">Pending</span>';
     const evtList = (a.events || []).join(', ') || '—';
-
     return `
     <tr>
-      <td class="mono">${a.athleteId}</td>
-      <td><strong>${a.firstName} ${a.lastName}</strong><br><span class="ts">${a.email}</span></td>
+      <td class="mono">${a.athlete_id}</td>
+      <td><strong>${a.first_name} ${a.last_name}</strong><br><span class="ts">${a.email}</span></td>
       <td style="font-size:0.78rem;color:var(--gray);">${evtList}</td>
       <td>${bestPullup != null ? `<strong>${bestPullup}</strong> reps` : '<span style="color:var(--gray)">—</span>'}</td>
       <td>${bestDash   != null ? `<strong>${bestDash}</strong> sec`   : '<span style="color:var(--gray)">—</span>'}</td>
@@ -603,7 +600,7 @@ function renderAthletes() {
 // ══════════════════════════════════════════
 // EDIT / VOID / RESTORE
 // ══════════════════════════════════════════
-let editingVisibleIndex = null;
+let editingResultId = null;
 
 function getVisibleResults() {
   const showVoided = document.getElementById('showVoided')?.checked;
@@ -612,36 +609,19 @@ function getVisibleResults() {
   return results;
 }
 
-function findFullIndex(visibleIdx) {
-  // Map visible row index back to full array index
-  const showVoided = document.getElementById('showVoided')?.checked;
-  const full = loadResults();
-  const visible = showVoided ? full : full.filter(r => !r.voided);
-  const record = visible[visibleIdx];
-  // Find the same object in full array by timestamp+athleteId
-  return full.findIndex(r =>
-    r.timestamp === record.timestamp &&
-    r.athleteId === record.athleteId &&
-    r.event     === record.event &&
-    r.attemptNum === record.attemptNum
-  );
-}
-
-function voidResult(visibleIdx) {
-  const full = loadResults();
-  const fi = findFullIndex(visibleIdx);
-  if (fi < 0) return;
-  full[fi].voided = true;
-  saveResults(full);
+async function voidResult(resultId) {
+  const sb = getSB();
+  const { error } = await sb.from('dc_results').update({ voided: true }).eq('id', resultId);
+  if (error) { console.error('voidResult:', error); return; }
+  await reloadData();
   renderAll();
 }
 
-function restoreResult(visibleIdx) {
-  const full = loadResults();
-  const fi = findFullIndex(visibleIdx);
-  if (fi < 0) return;
-  full[fi].voided = false;
-  saveResults(full);
+async function restoreResult(resultId) {
+  const sb = getSB();
+  const { error } = await sb.from('dc_results').update({ voided: false }).eq('id', resultId);
+  if (error) { console.error('restoreResult:', error); return; }
+  await reloadData();
   renderAll();
 }
 
@@ -649,9 +629,9 @@ function openEdit(visibleIdx) {
   const visible = getVisibleResults();
   const r = visible[visibleIdx];
   if (!r) return;
-  editingVisibleIndex = visibleIdx;
-  document.getElementById('modalTitle').textContent = `Edit ${EVENT_LABELS[r.event]} · ${r.athleteId}`;
-  document.getElementById('modalDesc').textContent  = `Attempt #${r.attemptNum} · currently ${r.value} ${EVENT_UNITS[r.event]}`;
+  editingResultId = r.id;
+  document.getElementById('modalTitle').textContent = `Edit ${EVENT_LABELS[r.event]} · ${r.athlete_id}`;
+  document.getElementById('modalDesc').textContent  = `Attempt #${r.attempt_num} · currently ${r.value} ${EVENT_UNITS[r.event]}`;
   document.getElementById('modalInput').value = r.value;
   document.getElementById('editModal').classList.add('open');
   setTimeout(() => document.getElementById('modalInput').focus(), 50);
@@ -659,21 +639,22 @@ function openEdit(visibleIdx) {
 
 function closeModal() {
   document.getElementById('editModal').classList.remove('open');
-  editingVisibleIndex = null;
+  editingResultId = null;
 }
 
-function saveEdit() {
-  if (editingVisibleIndex == null) return;
+async function saveEdit() {
+  if (!editingResultId) return;
   const newVal = parseFloat(document.getElementById('modalInput').value);
   if (isNaN(newVal)) return;
-  const full = loadResults();
-  const fi = findFullIndex(editingVisibleIndex);
-  if (fi < 0) return;
-  full[fi].value = newVal;
-  full[fi].score = calcScore(full[fi].event, newVal);
-  full[fi].editedAt = new Date().toISOString();
-  saveResults(full);
+  const r = _cachedResults.find(r => r.id === editingResultId);
+  if (!r) return;
+  const sb = getSB();
+  const { error } = await sb.from('dc_results')
+    .update({ value: newVal, score: calcScore(r.event, newVal) })
+    .eq('id', editingResultId);
+  if (error) { console.error('saveEdit:', error); return; }
   closeModal();
+  await reloadData();
   renderAll();
 }
 
@@ -706,17 +687,17 @@ function exportCSV(type) {
 
   if (type === 'results') {
     const csv = toCSV(
-      results.map(r => [r.id || '', r.athleteId, athleteName(r.athleteId), r.event, r.attemptNum, r.value, r.score, r.officialId || '', r.timestamp]),
+      results.map(r => [r.id||'', r.athlete_id, athleteName(r.athlete_id), r.event, r.attempt_num, r.value, r.score, r.official_id||'', r.timestamp]),
       ['result_id','athlete_id','name','event','attempt_num','value','score','official_id','timestamp']
     );
     downloadCSV(csv, `dc-results-${date}.csv`);
   } else if (type === 'bests') {
     const map = {};
     results.forEach(r => {
-      if (!map[r.athleteId]) map[r.athleteId] = {};
-      const cur = map[r.athleteId][r.event];
-      const isBetter = cur == null || (r.event === 'dash' ? r.value < cur.value : r.value > cur.value);
-      if (isBetter) map[r.athleteId][r.event] = r;
+      if (!map[r.athlete_id]) map[r.athlete_id] = {};
+      const cur = map[r.athlete_id][r.event];
+      const isBetter = cur == null || (r.event === 'dash' ? Number(r.value) < Number(cur.value) : Number(r.value) > Number(cur.value));
+      if (isBetter) map[r.athlete_id][r.event] = r;
     });
     const rows = Object.entries(map).map(([id, evts]) => {
       const p = evts.pullup, d = evts.dash, j = evts.jump;
@@ -729,27 +710,34 @@ function exportCSV(type) {
     ), `dc-bests-${date}.csv`);
   } else if (type === 'athletes') {
     downloadCSV(toCSV(
-      athletes.map(a => [a.athleteId, a.firstName, a.lastName, a.email, a.dob, a.gender, (a.events||[]).join('|'), a.registeredAt]),
+      athletes.map(a => [a.athlete_id, a.first_name, a.last_name, a.email, a.dob, a.gender, (a.events||[]).join('|'), a.registered_at]),
       ['athlete_id','first_name','last_name','email','dob','gender','events','registered_at']
     ), `dc-athletes-${date}.csv`);
   }
 }
 
-function clearAllResults() {
-  if (!confirm('Clear ALL logged results? This cannot be undone.')) return;
-  localStorage.removeItem(LS_RESULTS);
+async function clearAllResults() {
+  if (!confirm('Void ALL results in Supabase for this event? This cannot be undone.')) return;
+  const sb = getSB();
+  await sb.from('dc_results').update({ voided: true }).eq('event_id', EVENT_ID);
+  await reloadData();
   renderAll();
 }
 
 // ══════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════
-function renderAll() {
+async function renderAll() {
+  await reloadData();
   renderStats();
   renderRecent();
   renderResults();
   renderAthletes();
 }
+
+// Also update the label on the clear button to reflect Supabase
+document.querySelector('[onclick="clearAllResults()"]')
+  ?.previousElementSibling?.setAttribute('title', 'Voids all results in Supabase for this event.');
 </script>
 
 </body>

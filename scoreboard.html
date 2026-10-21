@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scoreboard · REALFIT Demo Combine</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+  <script src="supabase-client.js"></script>
   <style>
     .tab-bar {
       display: flex;
@@ -592,91 +594,84 @@ function switchTab(panel, btn) {
 // The render pipeline stays the same.
 const REFRESH_INTERVAL_MS = 30000; // 30 seconds
 
-function fetchResults() {
-  // Reads localStorage dc_results (written by official.html).
-  // Merges with DEMO_ATHLETES seed data — real entries override seed for matching IDs.
-  // Also includes registered athletes (dc_athletes) who haven't competed yet — true live scoreboard.
-  // TODO: swap this for a Supabase fetch when backend is live.
+async function fetchResults() {
+  // ── Supabase fetch ──
+  // Pulls registered athletes + results for the current event,
+  // merges them into the same athlete map the render pipeline expects.
+  // Falls back to DEMO_ATHLETES seed data on any error.
+  const MAX_ATTEMPTS = { pullup: 1, dash: 2, jump: 3 };
+
   try {
-    const raw = JSON.parse(localStorage.getItem('dc_results') || '[]');
-    const active = raw.filter(r => !r.voided);
+    const sb = getSB();
 
-    // Load registered athletes for DOB and to include those with no results yet
-    let registeredAthletes = [];
-    try {
-      registeredAthletes = JSON.parse(localStorage.getItem('dc_athletes') || '[]');
-    } catch(e) {}
+    // Fetch athletes and results in parallel
+    const [{ data: athleteRows, error: aErr }, { data: resultRows, error: rErr }] =
+      await Promise.all([
+        sb.from('dc_athletes').select('*').eq('event_id', EVENT_ID),
+        sb.from('dc_results').select('*').eq('event_id', EVENT_ID).eq('voided', false)
+      ]);
 
-    // Build DOB lookup from registered athletes
-    const dobMap = {};
-    registeredAthletes.forEach(a => {
-      if (a.athleteId && a.dob) dobMap[a.athleteId] = a.dob;
-    });
+    if (aErr) throw aErr;
+    if (rErr) throw rErr;
 
-    if (!active.length && !registeredAthletes.length) return Promise.resolve(DEMO_ATHLETES);
+    // If no live data at all, show seed data
+    if (!athleteRows.length && !resultRows.length) return DEMO_ATHLETES;
 
-    // Max attempts per event (must match official.html EVENT_CONFIG)
-    const MAX_ATTEMPTS = { pullup: 1, dash: 2, jump: 3 };
-
-    // Build a map: athleteId → best result per event + attempt count
+    // Build map from registered athletes
     const map = {};
-
-    // Pre-populate map with all registered athletes (even those with no results)
-    registeredAthletes.forEach(a => {
-      if (!a.athleteId) return;
-      map[a.athleteId] = {
-        id:   a.athleteId,
-        name: (a.firstName + ' ' + a.lastName).trim() || a.athleteId,
+    athleteRows.forEach(a => {
+      map[a.athlete_id] = {
+        id:   a.athlete_id,
+        name: `${a.first_name} ${a.last_name}`.trim(),
         dob:  a.dob || null,
         pullup: null, dash: null, jump: null,
         pullupAttempts: 0, dashAttempts: 0, jumpAttempts: 0
       };
     });
 
-    // Layer in results — track attempt counts per event
-    active.forEach(r => {
-      if (!map[r.athleteId]) map[r.athleteId] = {
-        id: r.athleteId, name: r.athleteName || r.athleteId, dob: null,
-        pullup: null, dash: null, jump: null,
-        pullupAttempts: 0, dashAttempts: 0, jumpAttempts: 0
-      };
-      if (r.athleteName && r.athleteName !== r.athleteId) map[r.athleteId].name = r.athleteName;
-      if (!map[r.athleteId].dob && dobMap[r.athleteId]) map[r.athleteId].dob = dobMap[r.athleteId];
-      // Count attempts
+    // Layer in results
+    resultRows.forEach(r => {
+      if (!map[r.athlete_id]) {
+        map[r.athlete_id] = {
+          id: r.athlete_id, name: r.athlete_name || r.athlete_id, dob: null,
+          pullup: null, dash: null, jump: null,
+          pullupAttempts: 0, dashAttempts: 0, jumpAttempts: 0
+        };
+      }
       const attKey = r.event + 'Attempts';
-      map[r.athleteId][attKey] = (map[r.athleteId][attKey] || 0) + 1;
-      // Best result
-      const cur = map[r.athleteId][r.event];
+      map[r.athlete_id][attKey] = (map[r.athlete_id][attKey] || 0) + 1;
+      const cur = map[r.athlete_id][r.event];
       const isBetter = cur == null || (r.event === 'dash' ? r.value < cur : r.value > cur);
-      if (isBetter) map[r.athleteId][r.event] = r.value;
+      if (isBetter) map[r.athlete_id][r.event] = Number(r.value);
     });
 
-    // Build merged athlete list: real data first, then seed rows not overridden
-    const realIds = new Set(Object.keys(map));
-    const seedRows = DEMO_ATHLETES.filter(a => !realIds.has(a.id));
-    const realRows = Object.values(map).map(a => {
-      // Compute per-event status: null = no result, 'PRELIM' = has result + attempts remain, 'FINAL' = exhausted
-      function eventStatus(evt) {
-        if (a[evt] == null) return null;
-        return a[evt + 'Attempts'] >= MAX_ATTEMPTS[evt] ? 'FINAL' : 'PRELIM';
-      }
-      return {
-        id: a.id, name: a.name, dob: a.dob || null,
-        pullup: a.pullup ?? null, pullupStatus: eventStatus('pullup'),
-        dash:   a.dash   ?? null, dashStatus:   eventStatus('dash'),
-        jump:   a.jump   ?? null, jumpStatus:   eventStatus('jump'),
-      };
-    });
-    // Seed athletes: all their results are baked in — mark as FINAL
+    // Build athlete rows with FINAL/PRELIM status
+    const liveIds = new Set(Object.keys(map));
+    const seedRows = DEMO_ATHLETES.filter(a => !liveIds.has(a.id));
     seedRows.forEach(a => {
       a.pullupStatus = a.pullup != null ? 'FINAL' : null;
       a.dashStatus   = a.dash   != null ? 'FINAL' : null;
       a.jumpStatus   = a.jump   != null ? 'FINAL' : null;
     });
 
-    return Promise.resolve([...realRows, ...seedRows]);
-  } catch(e) {
-    return Promise.resolve(DEMO_ATHLETES);
+    const liveRows = Object.values(map).map(a => {
+      function eventStatus(evt) {
+        if (a[evt] == null) return null;
+        return a[evt + 'Attempts'] >= MAX_ATTEMPTS[evt] ? 'FINAL' : 'PRELIM';
+      }
+      return {
+        id: a.id, name: a.name, dob: a.dob,
+        pullup: a.pullup, pullupStatus: eventStatus('pullup'),
+        dash:   a.dash,   dashStatus:   eventStatus('dash'),
+        jump:   a.jump,   jumpStatus:   eventStatus('jump'),
+      };
+    });
+
+    return [...liveRows, ...seedRows];
+
+  } catch (err) {
+    console.warn('Supabase fetch failed, using seed data:', err);
+    return DEMO_ATHLETES;
   }
 }
 
@@ -690,9 +685,30 @@ function refresh() {
   });
 }
 
-// Init + start polling
+// ── Init + Supabase Realtime ──
+// Subscribe to inserts on dc_results and dc_athletes for this event.
+// Any change triggers an immediate refresh — no polling needed.
+function initRealtime() {
+  try {
+    const sb = getSB();
+    sb.channel(`scoreboard-${EVENT_ID}`)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'dc_results',
+        filter: `event_id=eq.${EVENT_ID}`
+      }, () => refresh())
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'dc_athletes',
+        filter: `event_id=eq.${EVENT_ID}`
+      }, () => refresh())
+      .subscribe();
+  } catch(e) {
+    console.warn('Realtime unavailable, falling back to polling:', e);
+    setInterval(refresh, REFRESH_INTERVAL_MS);
+  }
+}
+
 refresh();
-setInterval(refresh, REFRESH_INTERVAL_MS);
+initRealtime();
 </script>
 
 </body>
