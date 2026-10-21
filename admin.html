@@ -631,13 +631,14 @@ function switchTab(panel, btn) {
 }
 
 // ══════════════════════════════════════════
-// RENDER ALL
+// RENDER ALL (sync — uses cached data)
 // ══════════════════════════════════════════
 function renderAll() {
   renderStats();
   renderRecent();
   renderResults();
   renderAthletes();
+  renderOfficials();
 }
 
 // ── Stats ──
