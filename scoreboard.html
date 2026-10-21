@@ -212,7 +212,6 @@
               <th style="width:48px;">#</th>
               <th>Athlete</th>
               <th>DCS</th>
-              <th>Band</th>
               <th>Pull-Ups</th>
               <th>40-Yd Dash</th>
               <th>Broad Jump</th>
@@ -520,13 +519,12 @@ function renderOverall() {
     <tr class="${a.dcs == null ? 'row-pending' : ''}">
       <td class="rank-cell ${i < 3 && a.dcs != null ? 'top' : ''}">${a.dcs != null ? i+1 : '—'}</td>
       <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}${a.age != null ? ' · ' + a.age + ' yrs' : ''}</div></td>
-      <td class="score-cell">${a.dcs != null ? fmtScore(a.dcs) + statusBadge(a.pullupStatus === 'FINAL' && a.dashStatus === 'FINAL' && a.jumpStatus === 'FINAL' ? 'FINAL' : a.dcs != null ? 'PRELIM' : null) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
-      <td>${a.dcs != null ? fmtBand(a.dcs) : '—'}</td>
-      <td>${fmtPending(a.pullup, ' <span class="sub-score">reps</span>')}${statusBadge(a.pullupStatus)}</td>
-      <td>${fmtPending(a.dash,   ' <span class="sub-score">sec</span>')}${statusBadge(a.dashStatus)}</td>
-      <td>${fmtPending(a.jump,   '"')}${statusBadge(a.jumpStatus)}</td>
+      <td class="score-cell"><div>${a.dcs != null ? fmtScore(a.dcs) + statusBadge(a.pullupStatus === 'FINAL' && a.dashStatus === 'FINAL' && a.jumpStatus === 'FINAL' ? 'FINAL' : a.dcs != null ? 'PRELIM' : null) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</div>${a.dcs != null ? `<div class="sub-score">${fmtBand(a.dcs)}</div>` : ''}</td>
+      <td>${a.pullup != null ? `<div>${fmt(a.pullup, ' <span class="sub-score">reps</span>')}${statusBadge(a.pullupStatus)}</div><div class="sub-score">${fmtScore(a.ps)} · ${fmtBand(a.ps)}</div>` : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
+      <td>${a.dash   != null ? `<div>${fmt(a.dash,   ' <span class="sub-score">sec</span>')}${statusBadge(a.dashStatus)}</div><div class="sub-score">${fmtScore(a.ds)} · ${fmtBand(a.ds)}</div>` : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
+      <td>${a.jump   != null ? `<div>${fmt(a.jump,   '"')}${statusBadge(a.jumpStatus)}</div><div class="sub-score">${fmtScore(a.js)} · ${fmtBand(a.js)}</div>` : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
     </tr>
-  `).join('') : `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--gray);font-size:0.875rem;">No athletes in this age bracket yet.</td></tr>`;
+  `).join('') : `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--gray);font-size:0.875rem;">No athletes in this age bracket yet.</td></tr>`;
 }
 
 function renderPullup() {
