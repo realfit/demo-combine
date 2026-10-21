@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Official App · REALFIT Demo Combine</title>
   <link rel="stylesheet" href="style.css">
-  <!-- QR scanner -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
   <style>
     body { background: var(--gray-light); }
+
     .official-header {
       background: var(--brand);
       color: var(--white);
@@ -17,171 +17,207 @@
       align-items: center;
       justify-content: space-between;
     }
-    .official-header h1 {
-      font-size: 1.3rem;
-      font-weight: 900;
-    }
+    .official-header h1 { font-size: 1.3rem; font-weight: 900; }
     .official-badge {
-      font-size: 0.65rem;
-      font-weight: 800;
-      letter-spacing: .16em;
-      text-transform: uppercase;
-      background: var(--accent);
-      color: var(--white);
-      padding: 4px 12px;
-      border-radius: 20px;
+      font-size: 0.65rem; font-weight: 800; letter-spacing: .16em;
+      text-transform: uppercase; background: var(--accent);
+      color: var(--white); padding: 4px 12px; border-radius: 20px;
     }
+
     .scan-box {
-      background: var(--white);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 24px;
-      margin-bottom: 20px;
+      background: var(--white); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px;
     }
-    .scan-box h2 {
-      font-size: 1.1rem;
-      font-weight: 800;
-      margin-bottom: 4px;
-    }
-    .scan-box p { font-size:0.82rem; color:var(--gray); margin-bottom:16px; }
-    #reader { width:100%; max-width:400px; border-radius:8px; overflow:hidden; }
-    .athlete-card {
-      background: var(--white);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 24px;
-      margin-bottom: 20px;
-      display: none;
-    }
-    .athlete-card.visible { display: block; }
-    .athlete-card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--gray-mid);
-    }
-    .athlete-card-id {
-      font-family: var(--display);
-      font-size: 1.5rem;
-      font-weight: 900;
-      color: var(--brand);
-    }
-    .status-badge {
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      padding: 4px 10px;
-      border-radius: 20px;
-    }
-    .status-badge.complete { background:#dcfce7; color:#166534; }
-    .status-badge.partial  { background:#fef9c3; color:#854d0e; }
-    .status-badge.pending  { background:var(--gray-mid); color:var(--gray); }
-    .event-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 0;
-      border-bottom: 1px solid var(--gray-mid);
-    }
-    .event-row:last-child { border-bottom: none; }
-    .event-icon { font-size: 1.3rem; width: 32px; text-align: center; flex-shrink: 0; }
-    .event-row-name { font-weight: 700; color: var(--brand); font-size: 0.9rem; }
-    .event-row-unit { font-size: 0.75rem; color: var(--gray); }
-    .event-row-result { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-    .result-recorded {
-      font-family: var(--display);
-      font-size: 1.3rem;
-      font-weight: 900;
-      color: var(--accent);
-    }
-    .edit-btn {
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--accent);
-      background: #eff6ff;
-      border: none;
-      padding: 4px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .entry-form {
-      display: none;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px dashed var(--gray-mid);
-    }
-    .entry-form.open { display: block; }
-    .manual-id-row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
+    .scan-box h2 { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
+    .scan-box p  { font-size: 0.82rem; color: var(--gray); margin-bottom: 16px; }
+    #reader { width: 100%; max-width: 400px; border-radius: 8px; overflow: hidden; }
+
+    .manual-id-row { display: flex; gap: 10px; margin-bottom: 0; }
     .manual-id-row input {
-      flex: 1;
-      padding: 10px 14px;
-      border: 1.5px solid var(--gray-mid);
-      border-radius: 8px;
-      font-family: var(--display);
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--brand);
-      outline: none;
-      text-transform: uppercase;
-      letter-spacing: .06em;
+      flex: 1; padding: 10px 14px; border: 1.5px solid var(--gray-mid);
+      border-radius: 8px; font-family: var(--display); font-size: 1.1rem;
+      font-weight: 700; color: var(--brand); outline: none;
+      text-transform: uppercase; letter-spacing: .06em;
     }
     .manual-id-row input:focus { border-color: var(--accent); }
     .manual-id-row button {
-      padding: 10px 18px;
-      background: var(--accent);
-      color: var(--white);
-      font-family: var(--display);
-      font-weight: 800;
-      font-size: 0.9rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+      padding: 10px 18px; background: var(--accent); color: var(--white);
+      font-family: var(--display); font-weight: 800; font-size: 0.9rem;
+      border: none; border-radius: 8px; cursor: pointer;
     }
+
+    /* ── Athlete card ── */
+    .athlete-card {
+      background: var(--white); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px; display: none;
+    }
+    .athlete-card.visible { display: block; }
+    .athlete-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--gray-mid);
+    }
+    .athlete-card-id { font-family: var(--display); font-size: 1.5rem; font-weight: 900; color: var(--brand); }
+    .status-badge {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; padding: 4px 10px; border-radius: 20px;
+    }
+    .status-badge.complete { background: #dcfce7; color: #166534; }
+    .status-badge.partial  { background: #fef9c3; color: #854d0e; }
+    .status-badge.pending  { background: var(--gray-mid); color: var(--gray); }
+
+    /* ── Event block ── */
+    .event-block {
+      border: 1.5px solid var(--gray-mid);
+      border-radius: 10px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .event-block-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--gray-light);
+      cursor: pointer;
+      user-select: none;
+    }
+    .event-block-header:hover { background: #e9eaec; }
+    .event-block.locked .event-block-header { cursor: default; }
+    .event-block.locked .event-block-header:hover { background: var(--gray-light); }
+
+    .event-block-title {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .event-icon { font-size: 1.2rem; }
+    .event-name { font-weight: 800; color: var(--brand); font-size: 0.95rem; }
+    .event-unit { font-size: 0.75rem; color: var(--gray); margin-top: 1px; }
+
+    .event-block-meta {
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    }
+    .attempt-counter {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--gray);
+    }
+    .attempt-counter.maxed { color: #dc2626; }
+    .best-result {
+      font-family: var(--display); font-size: 1.3rem; font-weight: 900; color: var(--accent);
+    }
+
+    /* ── Attempt list ── */
+    .event-body { padding: 0 16px 16px; border-top: 1px solid var(--gray-mid); }
+    .attempts-list { margin: 12px 0 14px; display: flex; flex-direction: column; gap: 8px; }
+    .attempt-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      background: var(--gray-light);
+      border-radius: 8px;
+      font-size: 0.88rem;
+    }
+    .attempt-row.is-best {
+      background: #eff6ff;
+      border: 1.5px solid var(--accent);
+    }
+    .attempt-num {
+      font-size: 0.68rem; font-weight: 800; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--gray); width: 52px; flex-shrink: 0;
+    }
+    .attempt-value {
+      font-family: var(--display); font-size: 1.2rem; font-weight: 900; color: var(--brand);
+    }
+    .attempt-score {
+      font-size: 0.78rem; color: var(--gray); margin-left: 4px;
+    }
+    .best-tag {
+      margin-left: auto;
+      font-size: 0.65rem; font-weight: 800; letter-spacing: .1em;
+      text-transform: uppercase; background: var(--accent);
+      color: var(--white); padding: 2px 8px; border-radius: 10px;
+    }
+
+    /* ── New attempt input ── */
+    .new-attempt-row {
+      display: flex; gap: 10px; align-items: center;
+    }
+    .new-attempt-row input {
+      flex: 1; padding: 12px 14px;
+      border: 1.5px solid var(--gray-mid); border-radius: 8px;
+      font-family: var(--display); font-size: 1.4rem; font-weight: 700;
+      color: var(--brand); outline: none; transition: border-color 0.2s;
+    }
+    .new-attempt-row input:focus { border-color: var(--accent); }
+    .new-attempt-row .unit-label {
+      font-size: 0.82rem; font-weight: 700; color: var(--gray);
+      white-space: nowrap;
+    }
+    .btn-add-attempt {
+      padding: 12px 20px; background: var(--accent); color: var(--white);
+      font-family: var(--display); font-weight: 800; font-size: 0.95rem;
+      border: none; border-radius: 8px; cursor: pointer; white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .btn-add-attempt:hover { background: var(--accent-light); }
+    .btn-add-attempt:disabled {
+      background: var(--gray-mid); color: var(--gray); cursor: not-allowed;
+    }
+    .locked-notice {
+      font-size: 0.78rem; color: var(--gray); font-style: italic;
+      padding: 10px 0 2px;
+    }
+
+    /* ── DCS result ── */
+    .dcs-card {
+      margin-top: 20px; background: var(--brand);
+      border-radius: var(--radius); padding: 24px; text-align: center; display: none;
+    }
+    .dcs-eyebrow {
+      font-size: 0.65rem; font-weight: 800; letter-spacing: .18em;
+      text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 4px;
+    }
+    .dcs-score {
+      font-family: var(--display); font-size: 3.5rem; font-weight: 900;
+      color: var(--accent-light); line-height: 1;
+    }
+    .dcs-band { font-size: 0.9rem; color: rgba(255,255,255,0.55); margin-top: 6px; }
+    .dcs-breakdown {
+      display: flex; justify-content: center; gap: 24px; margin-top: 16px;
+      padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .dcs-breakdown-item { text-align: center; }
+    .dcs-breakdown-item .label {
+      font-size: 0.62rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 3px;
+    }
+    .dcs-breakdown-item .val {
+      font-family: var(--display); font-size: 1.1rem; font-weight: 900;
+      color: rgba(255,255,255,0.85);
+    }
+
+    /* ── Log ── */
+    .cert-log-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-bottom: 1px solid var(--gray-mid);
+      font-size: 0.82rem;
+    }
+    .cert-log-row:last-child { border-bottom: none; }
+
+    /* ── Login ── */
     #login-screen {
-      position: fixed; inset: 0;
-      background: var(--brand);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
+      position: fixed; inset: 0; background: var(--brand);
+      display: flex; align-items: center; justify-content: center; z-index: 999;
     }
     .login-card {
-      background: var(--white);
-      border-radius: var(--radius);
-      padding: 40px;
-      width: 320px;
-      text-align: center;
+      background: var(--white); border-radius: var(--radius);
+      padding: 40px; width: 320px; text-align: center;
     }
-    .login-card h2 { font-size: 1.4rem; margin-bottom: 6px; }
     .login-card p { font-size: 0.82rem; color: var(--gray); margin-bottom: 24px; }
     .login-card input {
-      width: 100%;
-      padding: 11px 14px;
-      border: 1.5px solid var(--gray-mid);
-      border-radius: 8px;
-      font-size: 1rem;
-      margin-bottom: 14px;
-      outline: none;
+      width: 100%; padding: 11px 14px; border: 1.5px solid var(--gray-mid);
+      border-radius: 8px; font-size: 1rem; margin-bottom: 14px; outline: none;
     }
     .login-card input:focus { border-color: var(--accent); }
     .login-card button {
-      width: 100%;
-      padding: 13px;
-      background: var(--accent);
-      color: var(--white);
-      font-family: var(--display);
-      font-weight: 800;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+      width: 100%; padding: 13px; background: var(--accent); color: var(--white);
+      font-family: var(--display); font-weight: 800; font-size: 1rem;
+      border: none; border-radius: 8px; cursor: pointer;
     }
     .login-error { color: #dc2626; font-size: 0.8rem; margin-top: 8px; display: none; }
   </style>
@@ -216,15 +252,17 @@
     <h2>Scan Athlete QR Code</h2>
     <p>Point the camera at the athlete's QR code to load their profile.</p>
     <div id="reader"></div>
-    <div style="margin-top:12px;font-size:0.8rem;color:var(--gray);text-align:center;">— or enter ID manually —</div>
-    <div class="manual-id-row" style="margin-top:12px;">
-      <input type="text" id="manualId" placeholder="DC26-0042" maxlength="10">
+    <div style="margin-top:12px;margin-bottom:12px;font-size:0.8rem;color:var(--gray);text-align:center;">— or enter ID manually —</div>
+    <div class="manual-id-row">
+      <input type="text" id="manualId" placeholder="DC26-0042" maxlength="10"
+             onkeydown="if(event.key==='Enter')loadAthlete(this.value.toUpperCase())">
       <button onclick="loadAthlete(document.getElementById('manualId').value.toUpperCase())">Load</button>
     </div>
   </div>
 
-  <!-- Athlete card (populated on scan/lookup) -->
+  <!-- Athlete card -->
   <div class="athlete-card" id="athleteCard">
+
     <div class="athlete-card-header">
       <div>
         <div class="athlete-card-id" id="cardAthleteId">—</div>
@@ -233,112 +271,104 @@
       <span class="status-badge pending" id="cardStatus">Pending</span>
     </div>
 
-    <!-- Pull-Ups -->
-    <div class="event-row">
-      <div class="event-icon">💪</div>
-      <div>
-        <div class="event-row-name">Pull-Ups</div>
-        <div class="event-row-unit">Max reps · dead hang</div>
-        <div class="entry-form" id="form-pullup">
-          <div class="result-input-row">
-            <input type="number" id="input-pullup" min="0" max="60" placeholder="0" step="1">
-            <div class="unit-label">reps</div>
-          </div>
-          <button class="btn-certify" onclick="certifyResult('pullup')">✓ Certify Result</button>
-        </div>
-      </div>
-      <div class="event-row-result">
-        <span class="result-recorded" id="result-pullup" style="display:none;"></span>
-        <button class="edit-btn" id="editbtn-pullup" onclick="toggleForm('pullup')" style="display:none;">Edit</button>
-        <button class="edit-btn" id="entrybtn-pullup" onclick="toggleForm('pullup')">Enter</button>
-      </div>
-    </div>
+    <!-- Event blocks injected by JS -->
+    <div id="eventBlocks"></div>
 
-    <!-- 40-Yard Dash -->
-    <div class="event-row">
-      <div class="event-icon">⚡</div>
-      <div>
-        <div class="event-row-name">40-Yard Dash</div>
-        <div class="event-row-unit">Seconds · best of 2</div>
-        <div class="entry-form" id="form-dash">
-          <div class="result-input-row">
-            <input type="number" id="input-dash" min="3.5" max="15" placeholder="0.00" step="0.01">
-            <div class="unit-label">seconds</div>
-          </div>
-          <button class="btn-certify" onclick="certifyResult('dash')">✓ Certify Result</button>
-        </div>
+    <!-- DCS composite -->
+    <div class="dcs-card" id="dcsCard">
+      <div class="dcs-eyebrow">Demo Combine Score</div>
+      <div class="dcs-score" id="dcsValue">—</div>
+      <div class="dcs-band" id="dcsBand">—</div>
+      <div class="dcs-breakdown">
+        <div class="dcs-breakdown-item"><div class="label">Pull-Ups</div><div class="val" id="dcsPs">—</div></div>
+        <div class="dcs-breakdown-item"><div class="label">40-Yd Dash</div><div class="val" id="dcsDs">—</div></div>
+        <div class="dcs-breakdown-item"><div class="label">Broad Jump</div><div class="val" id="dcsJs">—</div></div>
       </div>
-      <div class="event-row-result">
-        <span class="result-recorded" id="result-dash" style="display:none;"></span>
-        <button class="edit-btn" id="editbtn-dash" onclick="toggleForm('dash')" style="display:none;">Edit</button>
-        <button class="edit-btn" id="entrybtn-dash" onclick="toggleForm('dash')">Enter</button>
-      </div>
-    </div>
-
-    <!-- Broad Jump -->
-    <div class="event-row">
-      <div class="event-icon">🦵</div>
-      <div>
-        <div class="event-row-name">Broad Jump</div>
-        <div class="event-row-unit">Inches · best of 2</div>
-        <div class="entry-form" id="form-jump">
-          <div class="result-input-row">
-            <input type="number" id="input-jump" min="12" max="160" placeholder="0" step="0.5">
-            <div class="unit-label">inches</div>
-          </div>
-          <button class="btn-certify" onclick="certifyResult('jump')">✓ Certify Result</button>
-        </div>
-      </div>
-      <div class="event-row-result">
-        <span class="result-recorded" id="result-jump" style="display:none;"></span>
-        <button class="edit-btn" id="editbtn-jump" onclick="toggleForm('jump')" style="display:none;">Edit</button>
-        <button class="edit-btn" id="entrybtn-jump" onclick="toggleForm('jump')">Enter</button>
-      </div>
-    </div>
-
-    <!-- Composite score (shown when all 3 certified) -->
-    <div id="dcs-result" style="display:none;margin-top:20px;background:var(--brand);border-radius:var(--radius);padding:20px;text-align:center;">
-      <div style="font-size:0.68rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:4px;">Demo Combine Score</div>
-      <div style="font-family:var(--display);font-size:3rem;font-weight:900;color:var(--accent-light);" id="dcs-value">—</div>
-      <div style="font-size:0.85rem;color:rgba(255,255,255,0.6);" id="dcs-band">—</div>
     </div>
 
   </div>
 
   <!-- Recent certifications log -->
   <div class="scan-box" style="margin-top:20px;">
-    <h2 style="margin-bottom:12px;">Recent Certifications</h2>
-    <div id="cert-log" style="font-size:0.82rem;color:var(--gray);">No certifications yet this session.</div>
+    <h2 style="margin-bottom:12px;">Session Log</h2>
+    <div id="certLog" style="font-size:0.82rem;color:var(--gray);">No entries yet this session.</div>
   </div>
 
 </div>
 
 <script>
-// ── Auth ──
-const PASSCODE = 'realfit2026'; // placeholder — replace with env var in production
-
-function doLogin() {
-  const val = document.getElementById('passcode').value;
-  if (val === PASSCODE) {
-    document.getElementById('login-screen').style.display = 'none';
-    initScanner();
-  } else {
-    document.getElementById('login-error').style.display = 'block';
+// ════════════════════════════════════════════
+// EVENT CONFIG — set here at event setup time
+// In production this comes from the database
+// ════════════════════════════════════════════
+const EVENT_CONFIG = [
+  {
+    id: 'pullup',
+    name: 'Pull-Ups',
+    icon: '💪',
+    unit: 'reps',
+    unitLabel: 'reps',
+    maxAttempts: 1,
+    step: 1,
+    min: 0,
+    max: 60,
+    higherBetter: true,
+    placeholder: '0'
+  },
+  {
+    id: 'dash',
+    name: '40-Yard Dash',
+    icon: '⚡',
+    unit: 'sec',
+    unitLabel: 'seconds',
+    maxAttempts: 2,
+    step: 0.01,
+    min: 3.5,
+    max: 15,
+    higherBetter: false,
+    placeholder: '0.00'
+  },
+  {
+    id: 'jump',
+    name: 'Broad Jump',
+    icon: '🦵',
+    unit: 'in',
+    unitLabel: 'inches',
+    maxAttempts: 3,
+    step: 0.5,
+    min: 12,
+    max: 200,
+    higherBetter: true,
+    placeholder: '0'
   }
-}
+];
 
-// ── Scoring (same engine as scoreboard.html) ──
+// ════════════════════════════════════════════
+// SCORING ENGINE (anchor-point interpolation)
+// ════════════════════════════════════════════
 const ANCHORS = {
   pullup: [{raw:0,score:0},{raw:2,score:100},{raw:5,score:250},{raw:8,score:400},{raw:12,score:550},{raw:16,score:700},{raw:20,score:820},{raw:25,score:920},{raw:30,score:1000}],
   dash:   [{raw:7.50,score:0},{raw:6.50,score:100},{raw:5.80,score:250},{raw:5.20,score:400},{raw:4.90,score:550},{raw:4.65,score:700},{raw:4.45,score:820},{raw:4.30,score:920},{raw:4.20,score:1000}],
   jump:   [{raw:48,score:0},{raw:60,score:100},{raw:72,score:250},{raw:84,score:400},{raw:96,score:550},{raw:108,score:700},{raw:114,score:820},{raw:120,score:920},{raw:126,score:1000}]
 };
-const BANDS = [{label:'Near Minimum',min:0,max:99},{label:'Well Below Average',min:100,max:249},{label:'Below Average',min:250,max:399},{label:'Average',min:400,max:549},{label:'Above Average',min:550,max:699},{label:'Well Above Average',min:700,max:819},{label:'Near Elite',min:820,max:919},{label:'Elite',min:920,max:999},{label:'Near Maximum',min:1000,max:1000}];
+const BANDS = [
+  {label:'Near Minimum',min:0,max:99},
+  {label:'Well Below Average',min:100,max:249},
+  {label:'Below Average',min:250,max:399},
+  {label:'Average',min:400,max:549},
+  {label:'Above Average',min:550,max:699},
+  {label:'Well Above Average',min:700,max:819},
+  {label:'Near Elite',min:820,max:919},
+  {label:'Elite',min:920,max:999},
+  {label:'Near Maximum',min:1000,max:1000}
+];
 
-function scoreEventDirect(event, raw) {
-  if (raw == null) return null;
-  const anchors = ANCHORS[event];
-  if (event === 'dash') {
+function calcScore(eventId, raw) {
+  const anchors = ANCHORS[eventId];
+  const cfg = EVENT_CONFIG.find(e => e.id === eventId);
+  if (!anchors || raw == null) return null;
+  if (!cfg.higherBetter) {
+    // Lower is better (dash): high raw = low score
     if (raw <= anchors[anchors.length-1].raw) return 1000;
     if (raw >= anchors[0].raw) return 0;
     for (let i = 0; i < anchors.length - 1; i++) {
@@ -350,6 +380,7 @@ function scoreEventDirect(event, raw) {
     }
     return 0;
   }
+  // Higher is better
   if (raw <= anchors[0].raw) return anchors[0].score;
   if (raw >= anchors[anchors.length-1].raw) return anchors[anchors.length-1].score;
   for (let i = 0; i < anchors.length - 1; i++) {
@@ -361,113 +392,301 @@ function scoreEventDirect(event, raw) {
   }
   return 0;
 }
+
 function getBandLabel(score) {
   return (BANDS.find(b => score >= b.min && score <= b.max) || BANDS[0]).label;
 }
 
-// ── State ──
-let currentAthlete = null;
-const results = {}; // { pullup: raw, dash: raw, jump: raw }
+function bestAttempt(eventId, attempts) {
+  const cfg = EVENT_CONFIG.find(e => e.id === eventId);
+  if (!attempts.length) return null;
+  return cfg.higherBetter
+    ? Math.max(...attempts)
+    : Math.min(...attempts);
+}
 
-// ── QR Scanner ──
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let currentAthlete = null;
+// attempts: { pullup: [14], dash: [5.12, 4.98], jump: [94, 101, 98] }
+let attempts = {};
+
+// ════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════
+const PASSCODE = 'realfit2026';
+
+function doLogin() {
+  if (document.getElementById('passcode').value === PASSCODE) {
+    document.getElementById('login-screen').style.display = 'none';
+    initScanner();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+// ════════════════════════════════════════════
+// QR SCANNER
+// ════════════════════════════════════════════
 function initScanner() {
   const html5QrCode = new Html5Qrcode('reader');
   html5QrCode.start(
     { facingMode: 'environment' },
     { fps: 10, qrbox: { width: 250, height: 250 } },
     (decodedText) => {
-      // Extract athlete ID from URL or raw text
       const match = decodedText.match(/DC\d{2}-\d{4}/i);
       if (match) {
         html5QrCode.stop().catch(() => {});
         loadAthlete(match[0].toUpperCase());
       }
     },
-    () => {} // ignore scan errors
+    () => {}
   ).catch(() => {
-    // Camera unavailable — silent fail, manual entry still works
-    document.getElementById('reader').innerHTML = '<div style="padding:16px;font-size:0.82rem;color:var(--gray);text-align:center;">Camera unavailable. Use manual ID entry below.</div>';
+    document.getElementById('reader').innerHTML =
+      '<div style="padding:16px;font-size:0.82rem;color:var(--gray);text-align:center;">Camera unavailable — use manual ID entry.</div>';
   });
 }
 
-// ── Load athlete ──
+// ════════════════════════════════════════════
+// LOAD ATHLETE
+// ════════════════════════════════════════════
 function loadAthlete(id) {
   if (!id || !id.match(/^DC\d{2}-\d{4}$/i)) {
     alert('Invalid athlete ID format. Example: DC26-0042');
     return;
   }
   currentAthlete = id.toUpperCase();
-  Object.keys(results).forEach(k => delete results[k]);
+  attempts = {};
+  EVENT_CONFIG.forEach(e => attempts[e.id] = []);
 
   document.getElementById('cardAthleteId').textContent = currentAthlete;
-  // In production: fetch name from Supabase. For demo, generate a placeholder.
   document.getElementById('cardAthleteName').textContent = 'Athlete ' + currentAthlete;
   document.getElementById('cardStatus').textContent = 'Pending';
   document.getElementById('cardStatus').className = 'status-badge pending';
+  document.getElementById('dcsCard').style.display = 'none';
   document.getElementById('athleteCard').classList.add('visible');
-  document.getElementById('dcs-result').style.display = 'none';
 
-  // Reset event rows
-  ['pullup','dash','jump'].forEach(evt => {
-    document.getElementById(`result-${evt}`).style.display = 'none';
-    document.getElementById(`editbtn-${evt}`).style.display = 'none';
-    document.getElementById(`entrybtn-${evt}`).style.display = '';
-    document.getElementById(`form-${evt}`).classList.remove('open');
-    document.getElementById(`input-${evt}`).value = '';
-  });
-
-  // Scroll to card
+  renderEventBlocks();
   document.getElementById('athleteCard').scrollIntoView({ behavior: 'smooth' });
 }
 
-function toggleForm(evt) {
-  document.getElementById(`form-${evt}`).classList.toggle('open');
+// ════════════════════════════════════════════
+// RENDER EVENT BLOCKS
+// ════════════════════════════════════════════
+function renderEventBlocks() {
+  const container = document.getElementById('eventBlocks');
+  container.innerHTML = '';
+  EVENT_CONFIG.forEach(cfg => {
+    container.appendChild(buildEventBlock(cfg));
+  });
 }
 
-function certifyResult(evt) {
-  const input = document.getElementById(`input-${evt}`);
-  const raw = parseFloat(input.value);
-  if (isNaN(raw) || raw <= 0) { alert('Enter a valid result.'); return; }
+function buildEventBlock(cfg) {
+  const evtAttempts = attempts[cfg.id] || [];
+  const maxReached = evtAttempts.length >= cfg.maxAttempts;
+  const best = bestAttempt(cfg.id, evtAttempts);
+  const bestScore = best != null ? calcScore(cfg.id, best) : null;
 
-  results[evt] = raw;
+  const block = document.createElement('div');
+  block.className = 'event-block' + (maxReached ? ' locked' : '');
+  block.id = `block-${cfg.id}`;
 
-  // Update UI
-  const label = evt === 'pullup' ? `${raw} reps` : evt === 'dash' ? `${raw}s` : `${raw}"`;
-  document.getElementById(`result-${evt}`).textContent = label;
-  document.getElementById(`result-${evt}`).style.display = '';
-  document.getElementById(`editbtn-${evt}`).style.display = '';
-  document.getElementById(`entrybtn-${evt}`).style.display = 'none';
-  document.getElementById(`form-${evt}`).classList.remove('open');
+  // Header
+  const header = document.createElement('div');
+  header.className = 'event-block-header';
+  header.innerHTML = `
+    <div class="event-block-title">
+      <span class="event-icon">${cfg.icon}</span>
+      <div>
+        <div class="event-name">${cfg.name}</div>
+        <div class="event-unit">best of ${cfg.maxAttempts} · ${cfg.unitLabel}</div>
+      </div>
+    </div>
+    <div class="event-block-meta">
+      <span class="attempt-counter ${maxReached ? 'maxed' : ''}" id="counter-${cfg.id}">
+        ${evtAttempts.length} / ${cfg.maxAttempts}
+      </span>
+      ${best != null ? `<span class="best-result" id="best-${cfg.id}">${best}${cfg.unit === 'reps' ? '' : cfg.unit === 'sec' ? 's' : '"'}</span>` : `<span class="best-result" id="best-${cfg.id}" style="display:none"></span>`}
+    </div>
+  `;
+  if (!maxReached) {
+    header.addEventListener('click', () => toggleBody(cfg.id));
+  }
+  block.appendChild(header);
 
-  // Log it
-  addToLog(currentAthlete, evt, raw);
+  // Body
+  const body = document.createElement('div');
+  body.className = 'event-body';
+  body.id = `body-${cfg.id}`;
+  body.style.display = 'none';
 
-  // Check if all 3 done
-  if (results.pullup != null && results.dash != null && results.jump != null) {
-    const ps = scoreEventDirect('pullup', results.pullup);
-    const ds = scoreEventDirect('dash', results.dash);
-    const js = scoreEventDirect('jump', results.jump);
-    const dcs = Math.round(ps * 0.33 + ds * 0.33 + js * 0.34);
-    document.getElementById('dcs-value').textContent = dcs;
-    document.getElementById('dcs-band').textContent = getBandLabel(dcs);
-    document.getElementById('dcs-result').style.display = '';
-    document.getElementById('cardStatus').textContent = 'Complete';
-    document.getElementById('cardStatus').className = 'status-badge complete';
+  // Attempt list
+  const list = document.createElement('div');
+  list.className = 'attempts-list';
+  list.id = `list-${cfg.id}`;
+  evtAttempts.forEach((val, i) => {
+    list.appendChild(buildAttemptRow(cfg, val, i, best));
+  });
+  body.appendChild(list);
+
+  // Input row (hidden when max reached)
+  if (!maxReached) {
+    const inputWrap = document.createElement('div');
+    inputWrap.innerHTML = `
+      <div class="new-attempt-row">
+        <input type="number" id="input-${cfg.id}"
+               min="${cfg.min}" max="${cfg.max}" step="${cfg.step}"
+               placeholder="${cfg.placeholder}"
+               onkeydown="if(event.key==='Enter')addAttempt('${cfg.id}')">
+        <span class="unit-label">${cfg.unitLabel}</span>
+        <button class="btn-add-attempt" id="addbtn-${cfg.id}"
+                onclick="addAttempt('${cfg.id}')">
+          Add Attempt ${evtAttempts.length + 1}
+        </button>
+      </div>
+    `;
+    body.appendChild(inputWrap);
   } else {
-    document.getElementById('cardStatus').textContent = 'In Progress';
-    document.getElementById('cardStatus').className = 'status-badge partial';
+    const notice = document.createElement('div');
+    notice.className = 'locked-notice';
+    notice.textContent = `Max attempts reached. Best: ${best}${cfg.unit === 'reps' ? ' reps' : cfg.unit === 'sec' ? 's' : '"'} → Score: ${bestScore}`;
+    body.appendChild(notice);
+  }
+
+  block.appendChild(body);
+  return block;
+}
+
+function buildAttemptRow(cfg, val, index, best) {
+  const isBest = val === best && cfg.maxAttempts > 1;
+  const score = calcScore(cfg.id, val);
+  const displayVal = `${val}${cfg.unit === 'reps' ? ' reps' : cfg.unit === 'sec' ? 's' : '"'}`;
+  const row = document.createElement('div');
+  row.className = 'attempt-row' + (isBest ? ' is-best' : '');
+  row.innerHTML = `
+    <span class="attempt-num">Attempt ${index + 1}</span>
+    <span class="attempt-value">${displayVal}</span>
+    <span class="attempt-score">· ${score} pts</span>
+    ${isBest ? '<span class="best-tag">Best</span>' : ''}
+  `;
+  return row;
+}
+
+function toggleBody(eventId) {
+  const body = document.getElementById(`body-${eventId}`);
+  const isOpen = body.style.display !== 'none';
+  // Close all others
+  EVENT_CONFIG.forEach(e => {
+    document.getElementById(`body-${e.id}`).style.display = 'none';
+  });
+  if (!isOpen) {
+    body.style.display = 'block';
+    const input = document.getElementById(`input-${eventId}`);
+    if (input) setTimeout(() => input.focus(), 50);
   }
 }
 
-function addToLog(athleteId, evt, raw) {
-  const log = document.getElementById('cert-log');
-  if (log.textContent.includes('No certifications')) log.innerHTML = '';
-  const evtName = {pullup:'Pull-Ups',dash:'40-Yd Dash',jump:'Broad Jump'}[evt];
-  const label = evt === 'pullup' ? `${raw} reps` : evt === 'dash' ? `${raw}s` : `${raw}"`;
-  const time = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+// ════════════════════════════════════════════
+// ADD ATTEMPT
+// ════════════════════════════════════════════
+function addAttempt(eventId) {
+  const cfg = EVENT_CONFIG.find(e => e.id === eventId);
+  const input = document.getElementById(`input-${eventId}`);
+  const raw = parseFloat(input.value);
+
+  if (isNaN(raw) || raw < cfg.min || raw > cfg.max) {
+    input.style.borderColor = '#dc2626';
+    setTimeout(() => input.style.borderColor = '', 1200);
+    return;
+  }
+
+  attempts[eventId].push(raw);
+  input.value = '';
+
+  // Log
+  const attemptNum = attempts[eventId].length;
+  const best = bestAttempt(eventId, attempts[eventId]);
+  addToLog(currentAthlete, cfg, raw, attemptNum, raw === best);
+
+  // Rebuild this block
+  const oldBlock = document.getElementById(`block-${eventId}`);
+  const newBlock = buildEventBlock(cfg);
+  oldBlock.parentNode.replaceChild(newBlock, oldBlock);
+
+  // Auto-open body so next attempt is ready (unless max reached)
+  const maxReached = attempts[eventId].length >= cfg.maxAttempts;
+  if (!maxReached) {
+    document.getElementById(`body-${eventId}`).style.display = 'block';
+    setTimeout(() => document.getElementById(`input-${eventId}`).focus(), 50);
+  }
+
+  updateStatus();
+  checkDCS();
+}
+
+// ════════════════════════════════════════════
+// STATUS + DCS
+// ════════════════════════════════════════════
+function updateStatus() {
+  const complete = EVENT_CONFIG.every(e => attempts[e.id].length >= e.maxAttempts);
+  const started  = EVENT_CONFIG.some(e => attempts[e.id].length > 0);
+  const badge = document.getElementById('cardStatus');
+  if (complete) {
+    badge.textContent = 'Complete';
+    badge.className = 'status-badge complete';
+  } else if (started) {
+    badge.textContent = 'In Progress';
+    badge.className = 'status-badge partial';
+  } else {
+    badge.textContent = 'Pending';
+    badge.className = 'status-badge pending';
+  }
+}
+
+function checkDCS() {
+  // Show DCS only when all events have at least 1 attempt
+  const allHaveAttempts = EVENT_CONFIG.every(e => attempts[e.id].length > 0);
+  if (!allHaveAttempts) return;
+
+  const bests = {};
+  const scores = {};
+  EVENT_CONFIG.forEach(e => {
+    bests[e.id] = bestAttempt(e.id, attempts[e.id]);
+    scores[e.id] = calcScore(e.id, bests[e.id]);
+  });
+
+  const dcs = Math.round(scores.pullup * 0.33 + scores.dash * 0.33 + scores.jump * 0.34);
+
+  document.getElementById('dcsValue').textContent = dcs;
+  document.getElementById('dcsBand').textContent = getBandLabel(dcs);
+  document.getElementById('dcsPs').textContent = scores.pullup;
+  document.getElementById('dcsDs').textContent = scores.dash;
+  document.getElementById('dcsJs').textContent = scores.jump;
+  document.getElementById('dcsCard').style.display = 'block';
+}
+
+// ════════════════════════════════════════════
+// SESSION LOG
+// ════════════════════════════════════════════
+function addToLog(athleteId, cfg, raw, attemptNum, isBest) {
+  const log = document.getElementById('certLog');
+  if (log.textContent.includes('No entries')) log.innerHTML = '';
+  const displayVal = `${raw}${cfg.unit === 'reps' ? ' reps' : cfg.unit === 'sec' ? 's' : '"'}`;
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
   const row = document.createElement('div');
-  row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-mid);';
-  row.innerHTML = `<span><strong style="color:var(--brand);">${athleteId}</strong> · ${evtName}</span><span style="color:var(--accent);font-weight:700;">${label} <span style="color:var(--gray);font-weight:400;">${time}</span></span>`;
+  row.className = 'cert-log-row';
+  row.innerHTML = `
+    <span>
+      <strong style="color:var(--brand);">${athleteId}</strong>
+      · ${cfg.name} Attempt ${attemptNum}
+    </span>
+    <span>
+      <strong style="color:var(--accent);">${displayVal}</strong>
+      ${isBest && attemptNum > 1 ? '<span style="color:#16a34a;font-weight:700;"> ★ best</span>' : ''}
+      <span style="color:var(--gray);margin-left:6px;">${time}</span>
+    </span>
+  `;
   log.prepend(row);
 }
 </script>
