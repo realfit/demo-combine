@@ -981,6 +981,7 @@ async function deleteOfficialResults(officialId) {
 // ── Managed officials (from dc_officials table) ──
 function renderManagedOfficials() {
   const officials = loadOfficials();
+  console.log('renderManagedOfficials:', officials.length, document.getElementById('tbody-officials-managed'));
   const tbody = document.getElementById('tbody-officials-managed');
   const empty = document.getElementById('officials-managed-empty');
   if (!officials.length) {
