@@ -12,7 +12,6 @@
   const EVENT_ID = (() => { const p = new URLSearchParams(window.location.search); return p.get('event') || 'demo'; })();
   let _sb = null;
   function getSB() {
-    if (typeof supabase === 'undefined') { alert('Supabase CDN not loaded!'); return null; }
     if (!_sb) _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
     return _sb;
   }
@@ -445,7 +444,6 @@ function bestAttempt(eventId, attempts) {
 async function persistAttempt(athleteId, eventId, attemptNum, value) {
   try {
     const sb = getSB();
-    if (!sb) { alert('getSB() returned null — Supabase not initialized'); return; }
     const { error } = await sb.from('dc_results').insert({
       event_id:     EVENT_ID,
       athlete_id:   athleteId,
