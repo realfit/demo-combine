@@ -489,11 +489,18 @@ function initScanner() {
     { facingMode: 'environment' },
     { fps: 10, qrbox: { width: 250, height: 250 } },
     (decodedText) => {
-      const match = decodedText.match(/DC\d{2}-\d{4}/i);
-      if (match) {
+      const idMatch = decodedText.match(/DC\d{2}-\d{4}/i);
+      if (idMatch) {
         qrScanner.stop().catch(() => {});
         qrScanner = null;
-        loadAthlete(match[0].toUpperCase());
+        // Try to extract name from URL param (?name=First%20Last)
+        let scannedName = null;
+        try {
+          const url = new URL(decodedText);
+          const n = url.searchParams.get('name');
+          if (n) scannedName = decodeURIComponent(n);
+        } catch(e) {}
+        loadAthlete(idMatch[0].toUpperCase(), scannedName);
       }
     },
     () => {}
@@ -523,7 +530,7 @@ function resetToScanner() {
 // ════════════════════════════════════════════
 // LOAD ATHLETE
 // ════════════════════════════════════════════
-function loadAthlete(id) {
+function loadAthlete(id, scannedName) {
   if (!id || !id.match(/^DC\d{2}-\d{4}$/i)) {
     alert('Invalid athlete ID format. Example: DC26-0042');
     return;
@@ -548,18 +555,22 @@ function loadAthlete(id) {
     });
   } catch(e) {}
 
-  // Pre-populate name from registration if available
-  let athleteName = 'Athlete ' + currentAthlete;
+  // Resolve athlete name — priority: QR scan > localStorage > sessionStorage > fallback
+  let athleteName = scannedName || null;
   try {
-    const reg = JSON.parse(sessionStorage.getItem('dc_registration') || '{}');
-    if (reg.athleteId === currentAthlete && reg.firstName) {
-      athleteName = reg.firstName + ' ' + reg.lastName;
-    }
-    // Also check localStorage athletes store
+    // localStorage athletes store (populated on same device registration)
     const athletes = JSON.parse(localStorage.getItem(LS_ATHLETES) || '[]');
     const found = athletes.find(a => a.athleteId === currentAthlete);
     if (found) athleteName = found.firstName + ' ' + found.lastName;
+    // sessionStorage (if official is on same device as registration)
+    if (!athleteName) {
+      const reg = JSON.parse(sessionStorage.getItem('dc_registration') || '{}');
+      if (reg.athleteId === currentAthlete && reg.firstName) {
+        athleteName = reg.firstName + ' ' + reg.lastName;
+      }
+    }
   } catch(e) {}
+  if (!athleteName) athleteName = currentAthlete; // bare ID fallback
 
   document.getElementById('cardAthleteId').textContent = currentAthlete;
   document.getElementById('cardAthleteName').textContent = athleteName;

@@ -133,8 +133,9 @@ window.addEventListener('DOMContentLoaded', () => {
     listEl.lastChild && (listEl.lastChild.style.borderBottom = 'none');
   }
 
-  // QR code — encodes the athlete ID + event URL
-  const qrData = `https://demo.scoremycombine.com/athlete?id=${athleteId}`;
+  // QR code — encodes athlete ID and name so official's scanner gets both without cross-device localStorage
+  const fullName = encodeURIComponent((data.firstName + ' ' + data.lastName).trim());
+  const qrData = `https://demo.scoremycombine.com/athlete?id=${athleteId}&name=${fullName}`;
   new QRCode(document.getElementById('qrcode'), {
     text: qrData,
     width: 180,
