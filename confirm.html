@@ -134,8 +134,8 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   // QR code — encodes athlete ID and name so official's scanner gets both without cross-device localStorage
-  const fullName = encodeURIComponent((data.firstName + ' ' + data.lastName).trim());
-  const qrData = `https://demo.scoremycombine.com/athlete?id=${athleteId}&name=${fullName}`;
+  const fullName = reg ? encodeURIComponent((reg.firstName + ' ' + reg.lastName).trim()) : '';
+  const qrData = `https://demo.scoremycombine.com/athlete?id=${athleteId}` + (fullName ? `&name=${fullName}` : '');
   new QRCode(document.getElementById('qrcode'), {
     text: qrData,
     width: 180,
