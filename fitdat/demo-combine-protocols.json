@@ -33,16 +33,16 @@
       "protocolId": "proto_demo_40yd_dash_v1",
       "testRef": "test_40yd_dash",
       "version": "1.0.0",
-      "description": "Standing-start 40-yard dash on flat surface. Athlete initiates on own movement. Hand timing. Best of two attempts.",
+      "description": "Standing-start 40-yard dash on flat surface. Athlete initiates on own movement. Electronic timing required. Best of two attempts.",
       "startCondition": "Standing start. Athlete self-initiates. Timer starts on first movement.",
       "equipmentRequired": [
-        "Stopwatch",
+        "Electronic timing gates",
         "Flat surface (turf or track)",
         "Measured 40-yard distance",
         "Judge or certified official"
       ],
       "equipmentProfile": "basic",
-      "timingMethod": "hand",
+      "timingMethod": "electronic",
       "measurementStandard": "Nearest 0.01 seconds. Best of two attempts recorded.",
       "invalidationRules": [
         "Distance not measured or verified",
