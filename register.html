@@ -189,10 +189,17 @@ async function handleRegister(e) {
       gender:     data.gender,
       events:     selectedEvents
     });
-    if (error) throw error;
+    if (error) {
+      alert('Registration DB error: ' + JSON.stringify(error));
+      btn.textContent = 'Complete Registration →';
+      btn.disabled = false;
+      return;
+    }
   } catch (err) {
-    console.warn('Supabase registration error:', err);
-    // Still redirect — confirm page has the data in sessionStorage
+    alert('Registration exception: ' + err.message);
+    btn.textContent = 'Complete Registration →';
+    btn.disabled = false;
+    return;
   }
 
   window.location.href = `confirm.html?id=${athleteId}`;
