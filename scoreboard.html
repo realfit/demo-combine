@@ -39,6 +39,24 @@
     .row-pending td { opacity: 0.6; }
     .row-pending .athlete-name { color: var(--gray) !important; }
 
+    /* FINAL / PRELIM result status badges */
+    .status-badge {
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding: 1px 5px;
+      border-radius: 4px;
+      vertical-align: middle;
+      line-height: 1.6;
+    }
+    .status-badge.final  { background: #dcfce7; color: #166534; }
+    .status-badge.prelim { background: #fef9c3; color: #854d0e; }
+    @media (prefers-color-scheme: dark) {
+      .status-badge.final  { background: #14532d; color: #86efac; }
+      .status-badge.prelim { background: #713f12; color: #fde68a; }
+    }
+
     /* Age bracket filter row */
     .age-bar {
       display: flex;
@@ -485,6 +503,13 @@ function fmtPending(val, suffix) {
   return fmt(val, suffix);
 }
 
+function statusBadge(status) {
+  if (!status) return '';
+  if (status === 'FINAL')  return ' <span class="status-badge final">FINAL</span>';
+  if (status === 'PRELIM') return ' <span class="status-badge prelim">PRELIM</span>';
+  return '';
+}
+
 function renderOverall() {
   const list = filteredScored();
   // Ranked: those with DCS sorted by score; then pending (no DCS) sorted by name
@@ -495,11 +520,11 @@ function renderOverall() {
     <tr class="${a.dcs == null ? 'row-pending' : ''}">
       <td class="rank-cell ${i < 3 && a.dcs != null ? 'top' : ''}">${a.dcs != null ? i+1 : '—'}</td>
       <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}${a.age != null ? ' · ' + a.age + ' yrs' : ''}</div></td>
-      <td class="score-cell">${a.dcs != null ? fmtScore(a.dcs) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
+      <td class="score-cell">${a.dcs != null ? fmtScore(a.dcs) + statusBadge(a.pullupStatus === 'FINAL' && a.dashStatus === 'FINAL' && a.jumpStatus === 'FINAL' ? 'FINAL' : a.dcs != null ? 'PRELIM' : null) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
       <td>${a.dcs != null ? fmtBand(a.dcs) : '—'}</td>
-      <td>${fmtPending(a.pullup, ' <span class="sub-score">reps</span>')}</td>
-      <td>${fmtPending(a.dash,   ' <span class="sub-score">sec</span>')}</td>
-      <td>${fmtPending(a.jump,   '"')}</td>
+      <td>${fmtPending(a.pullup, ' <span class="sub-score">reps</span>')}${statusBadge(a.pullupStatus)}</td>
+      <td>${fmtPending(a.dash,   ' <span class="sub-score">sec</span>')}${statusBadge(a.dashStatus)}</td>
+      <td>${fmtPending(a.jump,   '"')}${statusBadge(a.jumpStatus)}</td>
     </tr>
   `).join('') : `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--gray);font-size:0.875rem;">No athletes in this age bracket yet.</td></tr>`;
 }
@@ -514,7 +539,7 @@ function renderPullup() {
       <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}${a.age != null ? ' · ' + a.age + ' yrs' : ''}</div></td>
       <td class="score-cell">${a.ps != null ? fmtScore(a.ps) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
       <td>${a.ps != null ? fmtBand(a.ps) : '—'}</td>
-      <td>${a.pullup != null ? fmt(a.pullup, ' reps') : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
+      <td>${a.pullup != null ? fmt(a.pullup, ' reps') + statusBadge(a.pullupStatus) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
     </tr>
   `).join('');
 }
@@ -529,7 +554,7 @@ function renderDash() {
       <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}${a.age != null ? ' · ' + a.age + ' yrs' : ''}</div></td>
       <td class="score-cell">${a.ds != null ? fmtScore(a.ds) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
       <td>${a.ds != null ? fmtBand(a.ds) : '—'}</td>
-      <td>${a.dash != null ? fmt(a.dash, ' sec') : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
+      <td>${a.dash != null ? fmt(a.dash, ' sec') + statusBadge(a.dashStatus) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
     </tr>
   `).join('');
 }
@@ -544,7 +569,7 @@ function renderJump() {
       <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}${a.age != null ? ' · ' + a.age + ' yrs' : ''}</div></td>
       <td class="score-cell">${a.js != null ? fmtScore(a.js) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
       <td>${a.js != null ? fmtBand(a.js) : '—'}</td>
-      <td>${a.jump != null ? fmt(a.jump, '"') : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
+      <td>${a.jump != null ? fmt(a.jump, '"') + statusBadge(a.jumpStatus) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
     </tr>
   `).join('');
 }
@@ -592,7 +617,10 @@ function fetchResults() {
 
     if (!active.length && !registeredAthletes.length) return Promise.resolve(DEMO_ATHLETES);
 
-    // Build a map: athleteId → best result per event
+    // Max attempts per event (must match official.html EVENT_CONFIG)
+    const MAX_ATTEMPTS = { pullup: 1, dash: 2, jump: 3 };
+
+    // Build a map: athleteId → best result per event + attempt count
     const map = {};
 
     // Pre-populate map with all registered athletes (even those with no results)
@@ -602,16 +630,24 @@ function fetchResults() {
         id:   a.athleteId,
         name: (a.firstName + ' ' + a.lastName).trim() || a.athleteId,
         dob:  a.dob || null,
-        pullup: null, dash: null, jump: null
+        pullup: null, dash: null, jump: null,
+        pullupAttempts: 0, dashAttempts: 0, jumpAttempts: 0
       };
     });
 
-    // Layer in results
+    // Layer in results — track attempt counts per event
     active.forEach(r => {
-      if (!map[r.athleteId]) map[r.athleteId] = { id: r.athleteId, name: r.athleteName || r.athleteId, dob: null, pullup: null, dash: null, jump: null };
+      if (!map[r.athleteId]) map[r.athleteId] = {
+        id: r.athleteId, name: r.athleteName || r.athleteId, dob: null,
+        pullup: null, dash: null, jump: null,
+        pullupAttempts: 0, dashAttempts: 0, jumpAttempts: 0
+      };
       if (r.athleteName && r.athleteName !== r.athleteId) map[r.athleteId].name = r.athleteName;
-      // Pull DOB from registration if available
       if (!map[r.athleteId].dob && dobMap[r.athleteId]) map[r.athleteId].dob = dobMap[r.athleteId];
+      // Count attempts
+      const attKey = r.event + 'Attempts';
+      map[r.athleteId][attKey] = (map[r.athleteId][attKey] || 0) + 1;
+      // Best result
       const cur = map[r.athleteId][r.event];
       const isBetter = cur == null || (r.event === 'dash' ? r.value < cur : r.value > cur);
       if (isBetter) map[r.athleteId][r.event] = r.value;
@@ -620,12 +656,25 @@ function fetchResults() {
     // Build merged athlete list: real data first, then seed rows not overridden
     const realIds = new Set(Object.keys(map));
     const seedRows = DEMO_ATHLETES.filter(a => !realIds.has(a.id));
-    const realRows = Object.values(map).map(a => ({
-      id: a.id, name: a.name, dob: a.dob || null,
-      pullup: a.pullup ?? null,
-      dash:   a.dash   ?? null,
-      jump:   a.jump   ?? null
-    }));
+    const realRows = Object.values(map).map(a => {
+      // Compute per-event status: null = no result, 'PRELIM' = has result + attempts remain, 'FINAL' = exhausted
+      function eventStatus(evt) {
+        if (a[evt] == null) return null;
+        return a[evt + 'Attempts'] >= MAX_ATTEMPTS[evt] ? 'FINAL' : 'PRELIM';
+      }
+      return {
+        id: a.id, name: a.name, dob: a.dob || null,
+        pullup: a.pullup ?? null, pullupStatus: eventStatus('pullup'),
+        dash:   a.dash   ?? null, dashStatus:   eventStatus('dash'),
+        jump:   a.jump   ?? null, jumpStatus:   eventStatus('jump'),
+      };
+    });
+    // Seed athletes: all their results are baked in — mark as FINAL
+    seedRows.forEach(a => {
+      a.pullupStatus = a.pullup != null ? 'FINAL' : null;
+      a.dashStatus   = a.dash   != null ? 'FINAL' : null;
+      a.jumpStatus   = a.jump   != null ? 'FINAL' : null;
+    });
 
     return Promise.resolve([...realRows, ...seedRows]);
   } catch(e) {
