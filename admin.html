@@ -259,7 +259,8 @@
         <thead>
           <tr>
             <th>Time</th>
-            <th>Athlete</th>
+            <th>Athlete ID</th>
+            <th>Name</th>
             <th>Event</th>
             <th>Attempt</th>
             <th>Value</th>
@@ -489,13 +490,14 @@ function renderRecent() {
   const results = loadResults().slice().reverse().slice(0, 20);
   const tbody = document.getElementById('tbody-recent');
   if (!results.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-notice">No activity yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-notice">No activity yet.</td></tr>';
     return;
   }
   tbody.innerHTML = results.map(r => `
     <tr class="${r.voided ? 'voided' : ''}">
       <td class="ts">${fmtTime(r.timestamp)}</td>
       <td class="mono">${r.athleteId}</td>
+      <td>${athleteName(r.athleteId)}</td>
       <td>${EVENT_LABELS[r.event] || r.event}</td>
       <td>#${r.attemptNum}</td>
       <td><strong>${r.value}</strong> ${EVENT_UNITS[r.event]}</td>
