@@ -208,7 +208,11 @@
     <h2>Admin Access</h2>
     <p>Restricted to event administrators.</p>
     <input type="password" id="passcode" placeholder="Admin passcode"
-           onkeydown="if(event.key==='Enter')doLogin()">
+           onkeydown="if(event.key==='Enter')doLogin()" style="margin-bottom:6px;">
+    <label style="display:flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--gray);margin-bottom:12px;cursor:pointer;">
+      <input type="checkbox" onchange="document.getElementById('passcode').type=this.checked?'text':'password'">
+      Show password
+    </label>
     <button onclick="doLogin()">Enter →</button>
     <div class="login-error" id="login-error">Incorrect passcode.</div>
   </div>

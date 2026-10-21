@@ -231,7 +231,11 @@
     <p>Enter the event passcode and your official ID.</p>
     <input type="password" id="passcode" placeholder="Event passcode"
            onkeydown="if(event.key==='Enter')document.getElementById('officialIdInput').focus()"
-           style="margin-bottom:10px;">
+           style="margin-bottom:6px;">
+    <label style="display:flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--gray);margin-bottom:10px;cursor:pointer;">
+      <input type="checkbox" onchange="document.getElementById('passcode').type=this.checked?'text':'password'">
+      Show password
+    </label>
     <input type="text" id="officialIdInput" placeholder="Your name or ID (e.g. J. Martinez)"
            onkeydown="if(event.key==='Enter')doLogin()"
            style="margin-bottom:14px;">
