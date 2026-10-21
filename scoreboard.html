@@ -51,6 +51,47 @@
       color: var(--gray);
     }
     .sub-score strong { color: var(--brand); }
+
+    /* Live indicator */
+    .live-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      background: var(--white);
+      border: 1.5px solid var(--gray-mid);
+      border-radius: 8px;
+      padding: 10px 16px;
+      margin-bottom: 24px;
+    }
+    .live-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #16a34a;
+    }
+    .live-dot::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #16a34a;
+      border-radius: 50%;
+      animation: pulse-green 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse-green {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.8); }
+    }
+    .last-updated { font-size: 0.75rem; color: var(--gray); }
+    .refresh-btn {
+      font-size: 0.75rem; font-weight: 700; color: var(--accent);
+      background: none; border: none; cursor: pointer; padding: 0;
+    }
+    .refresh-btn:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -75,6 +116,13 @@
 <!-- Scoreboard -->
 <section class="section section-gray" style="padding-top:40px;">
   <div class="container">
+
+    <!-- Live bar -->
+    <div class="live-bar">
+      <span class="live-dot">Live Results</span>
+      <span class="last-updated" id="lastUpdated">Loading…</span>
+      <button class="refresh-btn" onclick="refresh()">↺ Refresh now</button>
+    </div>
 
     <!-- Tab bar -->
     <div class="tab-bar">
@@ -379,11 +427,31 @@ function switchTab(panel, btn) {
   btn.classList.add('active');
 }
 
-// Init
-renderOverall();
-renderPullup();
-renderDash();
-renderJump();
+// ── Live refresh ──
+// When Supabase is connected, replace fetchResults() with a real query.
+// The render pipeline stays the same.
+const REFRESH_INTERVAL_MS = 30000; // 30 seconds
+
+function fetchResults() {
+  // TODO: replace with Supabase fetch when backend is live
+  // e.g. supabase.from('results').select('*').then(({data}) => processResults(data))
+  return Promise.resolve(DEMO_ATHLETES); // placeholder: returns seed data
+}
+
+function refresh() {
+  fetchResults().then(() => {
+    renderOverall();
+    renderPullup();
+    renderDash();
+    renderJump();
+    const now = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    document.getElementById('lastUpdated').textContent = `Last updated: ${now}`;
+  });
+}
+
+// Init + start polling
+refresh();
+setInterval(refresh, REFRESH_INTERVAL_MS);
 </script>
 
 </body>
