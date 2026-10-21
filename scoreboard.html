@@ -458,18 +458,22 @@ function fetchResults() {
     // Build a map: athleteId → { pullup: best, dash: best, jump: best }
     const map = {};
     active.forEach(r => {
-      if (!map[r.athleteId]) map[r.athleteId] = { id: r.athleteId, name: r.athleteId };
+      if (!map[r.athleteId]) map[r.athleteId] = { id: r.athleteId, name: r.athleteName || r.athleteId };
+      // Upgrade name if a better one appears in a later record
+      if (r.athleteName && r.athleteName !== r.athleteId) map[r.athleteId].name = r.athleteName;
       const cur = map[r.athleteId][r.event];
       const isBetter = cur == null
         || (r.event === 'dash'   ? r.value < cur : r.value > cur);
       if (isBetter) map[r.athleteId][r.event] = r.value;
     });
 
-    // Resolve names from dc_athletes
+    // Also try dc_athletes as a fallback (same-device registrations)
     try {
       const athletes = JSON.parse(localStorage.getItem('dc_athletes') || '[]');
       athletes.forEach(a => {
-        if (map[a.athleteId]) map[a.athleteId].name = a.firstName + ' ' + a.lastName;
+        if (map[a.athleteId] && map[a.athleteId].name === a.athleteId) {
+          map[a.athleteId].name = a.firstName + ' ' + a.lastName;
+        }
       });
     } catch(e) {}
 

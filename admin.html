@@ -429,9 +429,13 @@ function loadAthletes() {
   try { return JSON.parse(localStorage.getItem(LS_ATHLETES) || '[]'); } catch(e) { return []; }
 }
 function athleteName(id) {
+  // First try dc_athletes store
   const athletes = loadAthletes();
   const a = athletes.find(a => a.athleteId === id);
-  return a ? a.firstName + ' ' + a.lastName : id;
+  if (a) return a.firstName + ' ' + a.lastName;
+  // Fall back to athleteName stamped on attempt records
+  const rec = loadResults().find(r => r.athleteId === id && r.athleteName && r.athleteName !== id);
+  return rec ? rec.athleteName : id;
 }
 function fmtTime(iso) {
   if (!iso) return '—';

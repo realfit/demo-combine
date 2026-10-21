@@ -439,6 +439,7 @@ function persistAttempt(athleteId, eventId, attemptNum, value) {
   const records = loadResults();
   records.push({
     athleteId,
+    athleteName: currentAthleteName || athleteId,
     event: eventId,
     attemptNum,
     value,
@@ -454,6 +455,7 @@ function persistAttempt(athleteId, eventId, attemptNum, value) {
 // STATE
 // ════════════════════════════════════════════
 let currentAthlete = null;
+let currentAthleteName = '';
 // attempts: { pullup: [14], dash: [5.12, 4.98], jump: [94, 101, 98] }
 let attempts = {};
 
@@ -513,6 +515,7 @@ function initScanner() {
 function resetToScanner() {
   // Hide athlete card, scroll up, restart scanner
   currentAthlete = null;
+  currentAthleteName = '';
   attempts = {};
   document.getElementById('athleteCard').classList.remove('visible');
   document.getElementById('manualId').value = '';
@@ -571,6 +574,7 @@ function loadAthlete(id, scannedName) {
     }
   } catch(e) {}
   if (!athleteName) athleteName = currentAthlete; // bare ID fallback
+  currentAthleteName = athleteName;
 
   document.getElementById('cardAthleteId').textContent = currentAthlete;
   document.getElementById('cardAthleteName').textContent = athleteName;
