@@ -922,7 +922,10 @@ function renderOfficials() {
       <td>${o.jump   || '—'}</td>
       <td><strong>${o.total}</strong></td>
       <td class="ts">${fmtTime(o.lastTs)}</td>
-      <td><button class="btn-edit" onclick="event.stopPropagation();showOfficialDetail('${o.id.replace(/'/g,"\\'")}')">View</button></td>
+      <td style="white-space:nowrap;">
+        <button class="btn-edit" onclick="event.stopPropagation();showOfficialDetail('${o.id.replace(/'/g,"\\'")}')">View</button>
+        <button class="btn-void" style="margin-left:4px;" onclick="event.stopPropagation();deleteOfficialResults('${o.id.replace(/'/g,"\\'")}')">Delete Results</button>
+      </td>
     </tr>`).join('');
 
   // Re-render detail if one is open
@@ -955,6 +958,19 @@ function closeOfficialDetail() {
   selectedOfficial = null;
   document.getElementById('official-detail').style.display = 'none';
   document.getElementById('tbody-official-detail').innerHTML = '';
+}
+
+async function deleteOfficialResults(officialId) {
+  if (!confirm(`Permanently delete ALL results entered by "${officialId}"? This cannot be undone.`)) return;
+  const sb = getSB();
+  const { error } = await sb.from('dc_results')
+    .delete()
+    .eq('event_id', EVENT_ID)
+    .eq('official_id', officialId);
+  if (error) { alert('Delete failed: ' + error.message); return; }
+  if (selectedOfficial === officialId) closeOfficialDetail();
+  await reloadData();
+  renderAll();
 }
 
 // ── Managed officials (from dc_officials table) ──

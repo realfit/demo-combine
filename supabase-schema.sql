@@ -82,6 +82,7 @@ create policy "results_public_read"    on dc_results for select using (true);
 create policy "results_anon_insert"    on dc_results for insert with check (true);
 -- Admin void: UPDATE allowed (service role bypasses RLS anyway, but explicit policy is clean)
 create policy "results_anon_update"    on dc_results for update using (true);
+create policy "results_anon_delete"    on dc_results for delete using (true);
 
 -- ------------------------------------------------------------
 -- 4b. DC_OFFICIALS  (one row per official per event)
