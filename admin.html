@@ -235,8 +235,8 @@
     <p>Restricted to event administrators.</p>
     <input type="password" id="passcode" placeholder="Admin passcode"
            onkeydown="if(event.key==='Enter')doLogin()" style="margin-bottom:6px;">
-    <label style="display:flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--gray);margin-bottom:12px;cursor:pointer;">
-      <input type="checkbox" onchange="document.getElementById('passcode').type=this.checked?'text':'password'">
+    <label style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:0.78rem;color:var(--gray);margin-bottom:12px;cursor:pointer;">
+      <input type="checkbox" style="width:14px;height:14px;flex-shrink:0;" onchange="document.getElementById('passcode').type=this.checked?'text':'password'">
       Show password
     </label>
     <button onclick="doLogin()">Enter →</button>
