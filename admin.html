@@ -299,6 +299,7 @@
       <table class="admin-table">
         <thead>
           <tr>
+            <th>Result ID</th>
             <th>Time</th>
             <th>Athlete ID</th>
             <th>Name</th>
@@ -534,6 +535,7 @@ function renderResults() {
     const origIdx = loadResults().indexOf(r); // index into full array
     return `
     <tr class="${r.voided ? 'voided' : ''}" id="row-${i}">
+      <td class="mono" style="font-size:0.72rem;color:var(--gray);" title="${r.id || '—'}">${r.id ? r.id.slice(0,8) : '—'}</td>
       <td class="ts">${fmtTime(r.timestamp)}</td>
       <td class="mono">${r.athleteId}</td>
       <td>${athleteName(r.athleteId)}</td>
@@ -703,8 +705,8 @@ function exportCSV(type) {
 
   if (type === 'results') {
     const csv = toCSV(
-      results.map(r => [r.athleteId, athleteName(r.athleteId), r.event, r.attemptNum, r.value, r.score, r.officialId || '', r.timestamp]),
-      ['athlete_id','name','event','attempt_num','value','score','official_id','timestamp']
+      results.map(r => [r.id || '', r.athleteId, athleteName(r.athleteId), r.event, r.attemptNum, r.value, r.score, r.officialId || '', r.timestamp]),
+      ['result_id','athlete_id','name','event','attempt_num','value','score','official_id','timestamp']
     );
     downloadCSV(csv, `dc-results-${date}.csv`);
   } else if (type === 'bests') {

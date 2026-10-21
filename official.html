@@ -442,6 +442,7 @@ function saveResults(records) {
 function persistAttempt(athleteId, eventId, attemptNum, value) {
   const records = loadResults();
   records.push({
+    id: crypto.randomUUID(),
     athleteId,
     athleteName: currentAthleteName || athleteId,
     event: eventId,
