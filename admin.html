@@ -133,6 +133,19 @@
     }
     .btn-edit:hover { background: #eff6ff; }
 
+    /* ── Search box ── */
+    .search-box {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--gray-light); border: 1.5px solid var(--gray-mid);
+      border-radius: 8px; padding: 7px 12px; width: 220px;
+    }
+    .search-box input {
+      border: none; background: transparent; outline: none;
+      font-size: 0.85rem; color: var(--brand); flex: 1; min-width: 0;
+    }
+    .search-box input::placeholder { color: var(--gray); }
+    .search-box svg { flex-shrink: 0; color: var(--gray); }
+
     /* ── Edit modal ── */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.5);
@@ -142,16 +155,20 @@
     .modal-overlay.open { display: flex; }
     .modal-card {
       background: var(--white); border-radius: var(--radius);
-      padding: 28px; width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      padding: 28px; width: min(380px, calc(100vw - 32px)); box-shadow: 0 20px 60px rgba(0,0,0,0.2);
     }
     .modal-card h3 { font-size: 1rem; font-weight: 800; margin-bottom: 4px; }
     .modal-card p  { font-size: 0.82rem; color: var(--gray); margin-bottom: 18px; }
     .modal-card input {
-      width: 100%; padding: 11px 14px;
+      width: 100%; padding: 11px 14px; box-sizing: border-box;
       border: 1.5px solid var(--gray-mid); border-radius: 8px;
       font-family: var(--display); font-size: 1.3rem; font-weight: 700;
       color: var(--brand); outline: none; margin-bottom: 14px;
     }
+    .modal-card input[type="text"], .modal-card input[type="date"] {
+      font-size: 1rem;
+    }
+    .modal-card label { font-size: 0.78rem; font-weight: 700; color: var(--gray); display: block; margin-bottom: 4px; }
     .modal-card input:focus { border-color: #7c3aed; }
     .modal-actions { display: flex; gap: 10px; }
     .btn-save {
@@ -227,7 +244,7 @@
   </div>
 </div>
 
-<!-- Edit modal -->
+<!-- Result edit modal -->
 <div class="modal-overlay" id="editModal">
   <div class="modal-card">
     <h3 id="modalTitle">Edit Result</h3>
@@ -236,6 +253,24 @@
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">Cancel</button>
       <button class="btn-save" onclick="saveEdit()">Save Change</button>
+    </div>
+  </div>
+</div>
+
+<!-- Athlete edit modal -->
+<div class="modal-overlay" id="editAthleteModal">
+  <div class="modal-card">
+    <h3>Edit Athlete</h3>
+    <p id="athleteModalDesc">Update name or date of birth.</p>
+    <label>First Name</label>
+    <input type="text" id="athleteFirstName" placeholder="First name">
+    <label>Last Name</label>
+    <input type="text" id="athleteLastName" placeholder="Last name">
+    <label>Date of Birth</label>
+    <input type="date" id="athleteDob">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeAthleteModal()">Cancel</button>
+      <button class="btn-save" onclick="saveAthleteEdit()">Save Change</button>
     </div>
   </div>
 </div>
@@ -297,7 +332,11 @@
         <h2>All Logged Attempts</h2>
         <div class="subtitle">Every attempt entered via the Official app. Click Edit to correct a value, or Void to exclude from scoring.</div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="resultsSearch" placeholder="Search name, ID, event…" oninput="renderResults()">
+        </div>
         <label style="font-size:0.78rem;color:var(--gray);font-weight:700;">
           <input type="checkbox" id="showVoided" onchange="renderResults()" style="margin-right:4px;">
           Show voided
@@ -330,25 +369,34 @@
 <!-- ══ ATHLETES ══ -->
 <div class="admin-panel" id="panel-athletes">
   <div class="admin-card">
-    <h2>Registered Athletes</h2>
-    <div class="subtitle">Athletes who completed registration on this device. Completion status based on logged results.</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h2>Registered Athletes</h2>
+        <div class="subtitle">Completion status based on logged results.</div>
+      </div>
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="athletesSearch" placeholder="Search name or ID…" oninput="renderAthletes()">
+      </div>
+    </div>
     <div class="admin-table-wrap">
       <table class="admin-table">
         <thead>
           <tr>
             <th>Athlete ID</th>
             <th>Name</th>
-            <th>Events Selected</th>
+            <th>DOB</th>
             <th>Pull-Ups</th>
             <th>40-Yd Dash</th>
             <th>Broad Jump</th>
             <th>Status</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="tbody-athletes"></tbody>
       </table>
     </div>
-    <div id="athletes-empty" class="empty-notice" style="display:none;">No athletes registered on this device yet.</div>
+    <div id="athletes-empty" class="empty-notice" style="display:none;">No athletes registered yet.</div>
   </div>
 </div>
 
@@ -527,8 +575,14 @@ function renderRecent() {
 // ── All Results ──
 function renderResults() {
   const showVoided = document.getElementById('showVoided')?.checked;
+  const q = (document.getElementById('resultsSearch')?.value || '').toLowerCase().trim();
   let results = loadResults();
   if (!showVoided) results = results.filter(r => !r.voided);
+  if (q) results = results.filter(r => {
+    const name = athleteName(r.athlete_id).toLowerCase();
+    const evtLabel = (EVENT_LABELS[r.event] || r.event).toLowerCase();
+    return r.athlete_id.toLowerCase().includes(q) || name.includes(q) || evtLabel.includes(q);
+  });
 
   const empty = document.getElementById('results-empty');
   const tbody = document.getElementById('tbody-results');
@@ -563,7 +617,12 @@ function renderResults() {
 
 // ── Athletes ──
 function renderAthletes() {
-  const athletes = loadAthletes();
+  const q = (document.getElementById('athletesSearch')?.value || '').toLowerCase().trim();
+  let athletes = loadAthletes();
+  if (q) athletes = athletes.filter(a =>
+    a.athlete_id.toLowerCase().includes(q) ||
+    `${a.first_name} ${a.last_name}`.toLowerCase().includes(q)
+  );
   const results  = loadResults().filter(r => !r.voided);
   const tbody    = document.getElementById('tbody-athletes');
   const empty    = document.getElementById('athletes-empty');
@@ -589,16 +648,17 @@ function renderAthletes() {
       ? '<span class="pill-complete">Complete</span>'
       : anyDone ? '<span class="pill-partial">In Progress</span>'
                 : '<span class="pill-pending">Pending</span>';
-    const evtList = (a.events || []).join(', ') || '—';
+    const dobDisplay = a.dob ? a.dob : '<span style="color:var(--gray)">—</span>';
     return `
     <tr>
       <td class="mono">${a.athlete_id}</td>
-      <td><strong>${a.first_name} ${a.last_name}</strong><br><span class="ts">${a.email}</span></td>
-      <td style="font-size:0.78rem;color:var(--gray);">${evtList}</td>
+      <td><strong>${a.first_name} ${a.last_name}</strong><br><span class="ts">${a.email || ''}</span></td>
+      <td class="ts">${dobDisplay}</td>
       <td>${bestPullup != null ? `<strong>${bestPullup}</strong> reps` : '<span style="color:var(--gray)">—</span>'}</td>
       <td>${bestDash   != null ? `<strong>${bestDash}</strong> sec`   : '<span style="color:var(--gray)">—</span>'}</td>
       <td>${bestJump   != null ? `<strong>${bestJump}"</strong>`      : '<span style="color:var(--gray)">—</span>'}</td>
       <td>${statusPill}</td>
+      <td><button class="btn-edit" onclick="openAthleteEdit('${a.id}')">Edit</button></td>
     </tr>`;
   }).join('');
 }
@@ -667,6 +727,48 @@ async function saveEdit() {
 // Close modal on overlay click
 document.getElementById('editModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeModal();
+});
+
+// ══════════════════════════════════════════
+// ATHLETE EDIT
+// ══════════════════════════════════════════
+let editingAthleteId = null; // uuid from dc_athletes.id
+
+function openAthleteEdit(uuid) {
+  const a = _cachedAthletes.find(a => a.id === uuid);
+  if (!a) return;
+  editingAthleteId = uuid;
+  document.getElementById('athleteModalDesc').textContent = `Athlete ID: ${a.athlete_id} · ${a.email || ''}`;
+  document.getElementById('athleteFirstName').value = a.first_name || '';
+  document.getElementById('athleteLastName').value  = a.last_name  || '';
+  document.getElementById('athleteDob').value       = a.dob        || '';
+  document.getElementById('editAthleteModal').classList.add('open');
+  setTimeout(() => document.getElementById('athleteFirstName').focus(), 50);
+}
+
+function closeAthleteModal() {
+  document.getElementById('editAthleteModal').classList.remove('open');
+  editingAthleteId = null;
+}
+
+async function saveAthleteEdit() {
+  if (!editingAthleteId) return;
+  const firstName = document.getElementById('athleteFirstName').value.trim();
+  const lastName  = document.getElementById('athleteLastName').value.trim();
+  const dob       = document.getElementById('athleteDob').value || null;
+  if (!firstName || !lastName) { alert('Name fields are required.'); return; }
+  const sb = getSB();
+  const { error } = await sb.from('dc_athletes')
+    .update({ first_name: firstName, last_name: lastName, dob })
+    .eq('id', editingAthleteId);
+  if (error) { console.error('saveAthleteEdit:', error); alert('Save failed: ' + error.message); return; }
+  closeAthleteModal();
+  await reloadData();
+  renderAll();
+}
+
+document.getElementById('editAthleteModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeAthleteModal();
 });
 
 // ══════════════════════════════════════════
