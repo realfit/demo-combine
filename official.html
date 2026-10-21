@@ -502,6 +502,22 @@ function loadAthlete(id) {
   attempts = {};
   EVENT_CONFIG.forEach(e => attempts[e.id] = []);
 
+  // Restore any previously logged attempts for this athlete from localStorage
+  // so the official can return mid-event (e.g. second 40-yd dash run) and
+  // pick up exactly where they left off.
+  try {
+    const prior = loadResults().filter(r => r.athleteId === currentAthlete && !r.voided);
+    prior.forEach(r => {
+      if (attempts[r.event] !== undefined) {
+        attempts[r.event][r.attemptNum - 1] = r.value;
+      }
+    });
+    // Compact any gaps (shouldn't happen but be safe)
+    EVENT_CONFIG.forEach(e => {
+      attempts[e.id] = attempts[e.id].filter(v => v !== undefined);
+    });
+  } catch(e) {}
+
   // Pre-populate name from registration if available
   let athleteName = 'Athlete ' + currentAthlete;
   try {
