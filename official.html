@@ -207,6 +207,7 @@
     .login-card {
       background: var(--white); border-radius: var(--radius);
       padding: 40px; width: 320px; text-align: center;
+      overflow: visible;
     }
     .login-card p { font-size: 0.82rem; color: var(--gray); margin-bottom: 24px; }
     .login-card input {
@@ -656,7 +657,7 @@ function buildEventBlock(cfg) {
     const inputWrap = document.createElement('div');
     inputWrap.innerHTML = `
       <div class="new-attempt-row">
-        <input type="number" id="input-${cfg.id}"
+        <input type="number" inputmode="decimal" id="input-${cfg.id}"
                min="${cfg.min}" max="${cfg.max}" step="${cfg.step}"
                placeholder="${cfg.placeholder}"
                onkeydown="if(event.key==='Enter')addAttempt('${cfg.id}')">
