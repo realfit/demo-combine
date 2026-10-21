@@ -12,7 +12,8 @@
       background: var(--gray-light);
       padding: 6px;
       border-radius: 10px;
-      margin-bottom: 28px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
       width: fit-content;
     }
     .tab-btn {
@@ -26,11 +27,54 @@
       color: var(--gray);
       cursor: pointer;
       transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
     }
     .tab-btn.active {
       background: var(--white);
       color: var(--brand);
       box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    /* Pending rows (athletes registered but not yet competed) */
+    .row-pending td { opacity: 0.6; }
+    .row-pending .athlete-name { color: var(--gray) !important; }
+
+    /* Age bracket filter row */
+    .age-bar {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .age-btn {
+      padding: 5px 14px;
+      border: 1.5px solid var(--gray-mid);
+      background: var(--white);
+      border-radius: 20px;
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--gray);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .age-btn.active {
+      background: var(--accent);
+      color: var(--white);
+      border-color: var(--accent);
+    }
+    .age-count {
+      display: inline-block;
+      background: rgba(255,255,255,0.25);
+      border-radius: 10px;
+      font-size: 0.7rem;
+      padding: 0 5px;
+      margin-left: 3px;
+    }
+    .age-btn:not(.active) .age-count {
+      background: var(--gray-mid);
+      color: var(--gray);
     }
     .challenge-panel { display: none; }
     .challenge-panel.active { display: block; }
@@ -124,12 +168,17 @@
       <button class="refresh-btn" onclick="refresh()">↺ Refresh now</button>
     </div>
 
-    <!-- Tab bar -->
+    <!-- Event tab bar -->
     <div class="tab-bar">
       <button class="tab-btn active" onclick="switchTab('overall', this)">🏆 Overall DCS</button>
       <button class="tab-btn" onclick="switchTab('pullup', this)">💪 Pull-Ups</button>
       <button class="tab-btn" onclick="switchTab('dash', this)">⚡ 40-Yard Dash</button>
       <button class="tab-btn" onclick="switchTab('jump', this)">🦵 Broad Jump</button>
+    </div>
+
+    <!-- Age bracket filter -->
+    <div class="age-bar" id="age-bar">
+      <!-- Populated by buildAgeBar() after data loads -->
     </div>
 
     <!-- Overall DCS panel -->
@@ -144,11 +193,11 @@
             <tr>
               <th style="width:48px;">#</th>
               <th>Athlete</th>
+              <th>DCS</th>
+              <th>Band</th>
               <th>Pull-Ups</th>
               <th>40-Yd Dash</th>
               <th>Broad Jump</th>
-              <th>DCS</th>
-              <th>Band</th>
             </tr>
           </thead>
           <tbody id="tbody-overall"></tbody>
@@ -337,16 +386,69 @@ function bandPill(score) {
 }
 
 // ── Demo seed data (replaced by live Supabase data in production) ──
+// dob in YYYY-MM-DD — used for age bracket filtering
 const DEMO_ATHLETES = [
-  { id:'DC26-0042', name:'Marcus Webb',    pullup:18, dash:4.72, jump:110 },
-  { id:'DC26-0017', name:'Jordan Reyes',   pullup:22, dash:4.55, jump:118 },
-  { id:'DC26-0091', name:'Tyler Okafor',   pullup:12, dash:5.10, jump:96  },
-  { id:'DC26-0033', name:'Devon Park',     pullup:8,  dash:5.45, jump:84  },
-  { id:'DC26-0058', name:'Caleb Morrison', pullup:25, dash:4.40, jump:122 },
-  { id:'DC26-0074', name:'Nate Alvarez',   pullup:15, dash:4.88, jump:104 },
-  { id:'DC26-0006', name:'Sam Bridges',    pullup:6,  dash:5.90, jump:78  },
-  { id:'DC26-0019', name:'Alex Tran',      pullup:20, dash:4.62, jump:115 },
+  { id:'DC26-0042', name:'Marcus Webb',    dob:'1994-03-14', pullup:18, dash:4.72, jump:110 },
+  { id:'DC26-0017', name:'Jordan Reyes',   dob:'1999-07-22', pullup:22, dash:4.55, jump:118 },
+  { id:'DC26-0091', name:'Tyler Okafor',   dob:'1991-11-05', pullup:12, dash:5.10, jump:96  },
+  { id:'DC26-0033', name:'Devon Park',     dob:'1983-08-30', pullup:8,  dash:5.45, jump:84  },
+  { id:'DC26-0058', name:'Caleb Morrison', dob:'2001-02-17', pullup:25, dash:4.40, jump:122 },
+  { id:'DC26-0074', name:'Nate Alvarez',   dob:'1978-05-09', pullup:15, dash:4.88, jump:104 },
+  { id:'DC26-0006', name:'Sam Bridges',    dob:'1970-12-01', pullup:6,  dash:5.90, jump:78  },
+  { id:'DC26-0019', name:'Alex Tran',      dob:'1986-09-25', pullup:20, dash:4.62, jump:115 },
 ];
+
+// ── Age bracket helpers ──
+const AGE_BRACKETS = [
+  { label: 'All Ages', min: 0,  max: 999 },
+  { label: '20–29',    min: 20, max: 29  },
+  { label: '30–39',    min: 30, max: 39  },
+  { label: '40–49',    min: 40, max: 49  },
+  { label: '50+',      min: 50, max: 999 },
+];
+
+function calcAge(dob) {
+  if (!dob) return null;
+  const today = new Date();
+  const birth = new Date(dob);
+  if (isNaN(birth)) return null;
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+}
+
+function inBracket(age, bracket) {
+  if (age == null) return bracket.min === 0; // unknown age only in All Ages
+  return age >= bracket.min && age <= bracket.max;
+}
+
+let currentAgeIdx = 0; // index into AGE_BRACKETS
+
+function buildAgeBar(scoredList) {
+  const bar = document.getElementById('age-bar');
+  bar.innerHTML = AGE_BRACKETS.map((b, i) => {
+    const count = b.min === 0
+      ? scoredList.length
+      : scoredList.filter(a => inBracket(a.age, b)).length;
+    return `<button class="age-btn${i === currentAgeIdx ? ' active' : ''}" onclick="switchAge(${i}, this)">
+      ${b.label}<span class="age-count">${count}</span>
+    </button>`;
+  }).join('');
+}
+
+function switchAge(idx, btn) {
+  currentAgeIdx = idx;
+  document.querySelectorAll('.age-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+}
+
+function filteredScored() {
+  const bracket = AGE_BRACKETS[currentAgeIdx];
+  if (bracket.min === 0) return scored;
+  return scored.filter(a => inBracket(a.age, bracket));
+}
 
 // ── Score + render (called after fetchResults resolves) ──
 let scored = [];
@@ -359,7 +461,8 @@ function scoreAll(athletes) {
     const dcs = (ps != null && ds != null && js != null)
       ? Math.round(ps * 0.33 + ds * 0.33 + js * 0.34)
       : null;
-    return { ...a, ps, ds, js, dcs };
+    const age = calcAge(a.dob);
+    return { ...a, ps, ds, js, dcs, age };
   });
 }
 
@@ -373,63 +476,84 @@ function fmtBand(score) {
   return score != null ? bandPill(score) : '<span style="color:var(--gray);font-size:0.78rem">Pending</span>';
 }
 
+function ageLabel(age) {
+  return age != null ? `<span class="sub-score">${age} yrs</span>` : '';
+}
+
+function fmtPending(val, suffix) {
+  if (val == null) return '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>';
+  return fmt(val, suffix);
+}
+
 function renderOverall() {
-  const withDcs  = scored.filter(a => a.dcs != null).sort((a,b) => b.dcs - a.dcs);
-  const noDcs    = scored.filter(a => a.dcs == null);
+  const list = filteredScored();
+  // Ranked: those with DCS sorted by score; then pending (no DCS) sorted by name
+  const withDcs = list.filter(a => a.dcs != null).sort((a,b) => b.dcs - a.dcs);
+  const noDcs   = list.filter(a => a.dcs == null).sort((a,b) => a.name.localeCompare(b.name));
   const all = [...withDcs, ...noDcs];
-  document.getElementById('tbody-overall').innerHTML = all.map((a, i) => `
-    <tr>
+  document.getElementById('tbody-overall').innerHTML = all.length ? all.map((a, i) => `
+    <tr class="${a.dcs == null ? 'row-pending' : ''}">
       <td class="rank-cell ${i < 3 && a.dcs != null ? 'top' : ''}">${a.dcs != null ? i+1 : '—'}</td>
-      <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}</div></td>
-      <td>${fmt(a.pullup, ' <span class="sub-score">reps</span>')}</td>
-      <td>${fmt(a.dash,   ' <span class="sub-score">sec</span>')}</td>
-      <td>${fmt(a.jump,   '"')}</td>
-      <td class="score-cell">${fmtScore(a.dcs)}</td>
-      <td>${fmtBand(a.dcs)}</td>
+      <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}${a.age != null ? ' · ' + a.age + ' yrs' : ''}</div></td>
+      <td class="score-cell">${a.dcs != null ? fmtScore(a.dcs) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
+      <td>${a.dcs != null ? fmtBand(a.dcs) : '—'}</td>
+      <td>${fmtPending(a.pullup, ' <span class="sub-score">reps</span>')}</td>
+      <td>${fmtPending(a.dash,   ' <span class="sub-score">sec</span>')}</td>
+      <td>${fmtPending(a.jump,   '"')}</td>
     </tr>
-  `).join('');
+  `).join('') : `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--gray);font-size:0.875rem;">No athletes in this age bracket yet.</td></tr>`;
 }
 
 function renderPullup() {
-  const has  = scored.filter(a => a.pullup != null).sort((a,b) => b.pullup - a.pullup);
-  const none = scored.filter(a => a.pullup == null);
+  const list = filteredScored();
+  const has  = list.filter(a => a.pullup != null).sort((a,b) => b.pullup - a.pullup);
+  const none = list.filter(a => a.pullup == null).sort((a,b) => a.name.localeCompare(b.name));
   document.getElementById('tbody-pullup').innerHTML = [...has, ...none].map((a,i) => `
-    <tr>
+    <tr class="${a.pullup == null ? 'row-pending' : ''}">
       <td class="rank-cell ${i < 3 && a.pullup != null ? 'top' : ''}">${a.pullup != null ? i+1 : '—'}</td>
-      <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}</div></td>
-      <td>${fmt(a.pullup, ' reps')}</td>
-      <td class="score-cell">${fmtScore(a.ps)}</td>
-      <td>${fmtBand(a.ps)}</td>
+      <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}${a.age != null ? ' · ' + a.age + ' yrs' : ''}</div></td>
+      <td class="score-cell">${a.ps != null ? fmtScore(a.ps) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
+      <td>${a.ps != null ? fmtBand(a.ps) : '—'}</td>
+      <td>${a.pullup != null ? fmt(a.pullup, ' reps') : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
     </tr>
   `).join('');
 }
 
 function renderDash() {
-  const has  = scored.filter(a => a.dash != null).sort((a,b) => a.dash - b.dash);
-  const none = scored.filter(a => a.dash == null);
+  const list = filteredScored();
+  const has  = list.filter(a => a.dash != null).sort((a,b) => a.dash - b.dash);
+  const none = list.filter(a => a.dash == null).sort((a,b) => a.name.localeCompare(b.name));
   document.getElementById('tbody-dash').innerHTML = [...has, ...none].map((a,i) => `
-    <tr>
+    <tr class="${a.dash == null ? 'row-pending' : ''}">
       <td class="rank-cell ${i < 3 && a.dash != null ? 'top' : ''}">${a.dash != null ? i+1 : '—'}</td>
-      <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}</div></td>
-      <td>${fmt(a.dash, ' sec')}</td>
-      <td class="score-cell">${fmtScore(a.ds)}</td>
-      <td>${fmtBand(a.ds)}</td>
+      <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}${a.age != null ? ' · ' + a.age + ' yrs' : ''}</div></td>
+      <td class="score-cell">${a.ds != null ? fmtScore(a.ds) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
+      <td>${a.ds != null ? fmtBand(a.ds) : '—'}</td>
+      <td>${a.dash != null ? fmt(a.dash, ' sec') : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
     </tr>
   `).join('');
 }
 
 function renderJump() {
-  const has  = scored.filter(a => a.jump != null).sort((a,b) => b.jump - a.jump);
-  const none = scored.filter(a => a.jump == null);
+  const list = filteredScored();
+  const has  = list.filter(a => a.jump != null).sort((a,b) => b.jump - a.jump);
+  const none = list.filter(a => a.jump == null).sort((a,b) => a.name.localeCompare(b.name));
   document.getElementById('tbody-jump').innerHTML = [...has, ...none].map((a,i) => `
-    <tr>
+    <tr class="${a.jump == null ? 'row-pending' : ''}">
       <td class="rank-cell ${i < 3 && a.jump != null ? 'top' : ''}">${a.jump != null ? i+1 : '—'}</td>
-      <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}</div></td>
-      <td>${fmt(a.jump, '"')}</td>
-      <td class="score-cell">${fmtScore(a.js)}</td>
-      <td>${fmtBand(a.js)}</td>
+      <td><div class="athlete-name">${a.name}</div><div class="sub-score">${a.id}${a.age != null ? ' · ' + a.age + ' yrs' : ''}</div></td>
+      <td class="score-cell">${a.js != null ? fmtScore(a.js) : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
+      <td>${a.js != null ? fmtBand(a.js) : '—'}</td>
+      <td>${a.jump != null ? fmt(a.jump, '"') : '<span style="color:var(--gray);font-style:italic;font-size:0.8rem;">Pending</span>'}</td>
     </tr>
   `).join('');
+}
+
+function renderAll() {
+  renderOverall();
+  renderPullup();
+  renderDash();
+  renderJump();
 }
 
 // ── Tab switching ──
@@ -448,40 +572,56 @@ const REFRESH_INTERVAL_MS = 30000; // 30 seconds
 function fetchResults() {
   // Reads localStorage dc_results (written by official.html).
   // Merges with DEMO_ATHLETES seed data — real entries override seed for matching IDs.
+  // Also includes registered athletes (dc_athletes) who haven't competed yet — true live scoreboard.
   // TODO: swap this for a Supabase fetch when backend is live.
   try {
     const raw = JSON.parse(localStorage.getItem('dc_results') || '[]');
     const active = raw.filter(r => !r.voided);
 
-    if (!active.length) return Promise.resolve(DEMO_ATHLETES);
+    // Load registered athletes for DOB and to include those with no results yet
+    let registeredAthletes = [];
+    try {
+      registeredAthletes = JSON.parse(localStorage.getItem('dc_athletes') || '[]');
+    } catch(e) {}
 
-    // Build a map: athleteId → { pullup: best, dash: best, jump: best }
-    const map = {};
-    active.forEach(r => {
-      if (!map[r.athleteId]) map[r.athleteId] = { id: r.athleteId, name: r.athleteName || r.athleteId };
-      // Upgrade name if a better one appears in a later record
-      if (r.athleteName && r.athleteName !== r.athleteId) map[r.athleteId].name = r.athleteName;
-      const cur = map[r.athleteId][r.event];
-      const isBetter = cur == null
-        || (r.event === 'dash'   ? r.value < cur : r.value > cur);
-      if (isBetter) map[r.athleteId][r.event] = r.value;
+    // Build DOB lookup from registered athletes
+    const dobMap = {};
+    registeredAthletes.forEach(a => {
+      if (a.athleteId && a.dob) dobMap[a.athleteId] = a.dob;
     });
 
-    // Also try dc_athletes as a fallback (same-device registrations)
-    try {
-      const athletes = JSON.parse(localStorage.getItem('dc_athletes') || '[]');
-      athletes.forEach(a => {
-        if (map[a.athleteId] && map[a.athleteId].name === a.athleteId) {
-          map[a.athleteId].name = a.firstName + ' ' + a.lastName;
-        }
-      });
-    } catch(e) {}
+    if (!active.length && !registeredAthletes.length) return Promise.resolve(DEMO_ATHLETES);
+
+    // Build a map: athleteId → best result per event
+    const map = {};
+
+    // Pre-populate map with all registered athletes (even those with no results)
+    registeredAthletes.forEach(a => {
+      if (!a.athleteId) return;
+      map[a.athleteId] = {
+        id:   a.athleteId,
+        name: (a.firstName + ' ' + a.lastName).trim() || a.athleteId,
+        dob:  a.dob || null,
+        pullup: null, dash: null, jump: null
+      };
+    });
+
+    // Layer in results
+    active.forEach(r => {
+      if (!map[r.athleteId]) map[r.athleteId] = { id: r.athleteId, name: r.athleteName || r.athleteId, dob: null, pullup: null, dash: null, jump: null };
+      if (r.athleteName && r.athleteName !== r.athleteId) map[r.athleteId].name = r.athleteName;
+      // Pull DOB from registration if available
+      if (!map[r.athleteId].dob && dobMap[r.athleteId]) map[r.athleteId].dob = dobMap[r.athleteId];
+      const cur = map[r.athleteId][r.event];
+      const isBetter = cur == null || (r.event === 'dash' ? r.value < cur : r.value > cur);
+      if (isBetter) map[r.athleteId][r.event] = r.value;
+    });
 
     // Build merged athlete list: real data first, then seed rows not overridden
     const realIds = new Set(Object.keys(map));
     const seedRows = DEMO_ATHLETES.filter(a => !realIds.has(a.id));
     const realRows = Object.values(map).map(a => ({
-      id: a.id, name: a.name,
+      id: a.id, name: a.name, dob: a.dob || null,
       pullup: a.pullup ?? null,
       dash:   a.dash   ?? null,
       jump:   a.jump   ?? null
@@ -496,10 +636,8 @@ function fetchResults() {
 function refresh() {
   fetchResults().then(athletes => {
     scoreAll(athletes);
-    renderOverall();
-    renderPullup();
-    renderDash();
-    renderJump();
+    buildAgeBar(scored);
+    renderAll();
     const now = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
     document.getElementById('lastUpdated').textContent = `Last updated: ${now}`;
   });
