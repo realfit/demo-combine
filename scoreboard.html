@@ -620,6 +620,11 @@ async function fetchResults() {
     if (aErr) throw aErr;
     if (rErr) throw rErr;
 
+    // DEBUG
+    console.log('EVENT_ID:', EVENT_ID, 'athletes:', athleteRows.length, 'results:', resultRows.length);
+    console.log('athlete rows:', JSON.stringify(athleteRows));
+    console.log('result rows:', JSON.stringify(resultRows));
+
     // If no live data at all, show seed data
     if (!athleteRows.length && !resultRows.length) return DEMO_ATHLETES;
 
