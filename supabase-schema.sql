@@ -82,3 +82,24 @@ create policy "results_public_read"    on dc_results for select using (true);
 create policy "results_anon_insert"    on dc_results for insert with check (true);
 -- Admin void: UPDATE allowed (service role bypasses RLS anyway, but explicit policy is clean)
 create policy "results_anon_update"    on dc_results for update using (true);
+
+-- ------------------------------------------------------------
+-- 4b. DC_OFFICIALS  (one row per official per event)
+-- ------------------------------------------------------------
+create table if not exists dc_officials (
+  id         uuid primary key default gen_random_uuid(),
+  event_id   text not null references events(id) on delete cascade,
+  name       text not null,
+  passcode   text not null,
+  created_at timestamptz default now(),
+  unique(event_id, name)
+);
+
+create index if not exists idx_dc_officials_event on dc_officials(event_id);
+
+-- DC_OFFICIALS — anon read (for login check) + admin insert/update/delete
+alter table dc_officials enable row level security;
+create policy "officials_public_read"   on dc_officials for select using (true);
+create policy "officials_anon_insert"   on dc_officials for insert with check (true);
+create policy "officials_anon_update"   on dc_officials for update using (true);
+create policy "officials_anon_delete"   on dc_officials for delete using (true);

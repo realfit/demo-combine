@@ -289,6 +289,7 @@
   <button class="admin-tab active" onclick="switchTab('overview', this)">📊 Overview</button>
   <button class="admin-tab" onclick="switchTab('results', this)">📋 All Results</button>
   <button class="admin-tab" onclick="switchTab('athletes', this)">👥 Athletes</button>
+  <button class="admin-tab" onclick="switchTab('officials', this)">🏅 Officials</button>
   <button class="admin-tab" onclick="switchTab('export', this)">⬇ Export</button>
 </div>
 
@@ -400,6 +401,108 @@
   </div>
 </div>
 
+<!-- ══ OFFICIALS ══ -->
+<div class="admin-panel" id="panel-officials">
+  <div class="admin-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h2>Officials</h2>
+        <div class="subtitle">Every official who has submitted results, derived from logged attempts.</div>
+      </div>
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="officialsSearch" placeholder="Search official…" oninput="renderOfficials()">
+      </div>
+    </div>
+
+    <!-- Summary table -->
+    <div class="admin-table-wrap" style="margin-bottom:28px;">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Official ID / Name</th>
+            <th>Pull-Ups</th>
+            <th>40-Yd Dash</th>
+            <th>Broad Jump</th>
+            <th>Total</th>
+            <th>Last Entry</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody-officials-summary"></tbody>
+      </table>
+    </div>
+
+    <!-- Per-official detail (expands on click) -->
+    <div id="official-detail" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-family:var(--display);font-size:1rem;font-weight:800;color:#7c3aed;" id="official-detail-name">—</div>
+        <button onclick="closeOfficialDetail()" style="font-size:0.78rem;font-weight:700;color:var(--gray);background:none;border:none;cursor:pointer;">✕ Close</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Athlete ID</th>
+              <th>Name</th>
+              <th>Event</th>
+              <th>#</th>
+              <th>Value</th>
+              <th>Score</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-official-detail"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="officials-empty" class="empty-notice" style="display:none;">No results have been entered yet.</div>
+  </div>
+
+  <!-- Manage registered officials -->
+  <div class="admin-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h2>Manage Officials</h2>
+        <div class="subtitle">Officials listed here can log in to the Official app using their assigned passcode.</div>
+      </div>
+      <button class="btn-export" style="background:#7c3aed;" onclick="openAddOfficial()">+ Add Official</button>
+    </div>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Name / ID</th>
+            <th>Passcode</th>
+            <th>Added</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-officials-managed"></tbody>
+      </table>
+    </div>
+    <div id="officials-managed-empty" class="empty-notice" style="display:none;">No officials added yet. Click "Add Official" to get started.</div>
+  </div>
+</div>
+
+<!-- Add/Edit official modal -->
+<div class="modal-overlay" id="officialModal">
+  <div class="modal-card">
+    <h3 id="officialModalTitle">Add Official</h3>
+    <p>Officials use this name and passcode to log in to the Official app.</p>
+    <label>Name / ID</label>
+    <input type="text" id="officialName" placeholder="e.g. J. Martinez">
+    <label>Passcode</label>
+    <input type="text" id="officialPasscode" placeholder="e.g. combine2026">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeOfficialModal()">Cancel</button>
+      <button class="btn-save" onclick="saveOfficial()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ EXPORT ══ -->
 <div class="admin-panel" id="panel-export">
   <div class="admin-card">
@@ -432,8 +535,9 @@ const EVENT_LABELS = { pullup: 'Pull-Ups', dash: '40-Yd Dash', jump: 'Broad Jump
 const EVENT_UNITS  = { pullup: 'reps', dash: 'sec', jump: 'in' };
 
 // ── In-memory cache (populated from Supabase on load + after mutations) ──
-let _cachedResults  = [];   // dc_results rows (snake_case from Supabase)
-let _cachedAthletes = [];   // dc_athletes rows
+let _cachedResults   = [];   // dc_results rows (snake_case from Supabase)
+let _cachedAthletes  = [];   // dc_athletes rows
+let _cachedOfficials = [];   // dc_officials rows
 
 // Scoring engine (mirrors official.html)
 const ANCHORS = {
@@ -486,16 +590,19 @@ function doLogin() {
 // ══════════════════════════════════════════
 async function reloadData() {
   const sb = getSB();
-  const [{ data: rRows, error: rErr }, { data: aRows, error: aErr }] = await Promise.all([
+  const [{ data: rRows, error: rErr }, { data: aRows, error: aErr }, { data: oRows, error: oErr }] = await Promise.all([
     sb.from('dc_results').select('*').eq('event_id', EVENT_ID).order('timestamp', { ascending: false }),
-    sb.from('dc_athletes').select('*').eq('event_id', EVENT_ID).order('registered_at', { ascending: true })
+    sb.from('dc_athletes').select('*').eq('event_id', EVENT_ID).order('registered_at', { ascending: true }),
+    sb.from('dc_officials').select('*').eq('event_id', EVENT_ID).order('created_at', { ascending: true })
   ]);
-  if (!rErr) _cachedResults  = rRows  || [];
-  if (!aErr) _cachedAthletes = aRows  || [];
+  if (!rErr) _cachedResults   = rRows  || [];
+  if (!aErr) _cachedAthletes  = aRows  || [];
+  if (!oErr) _cachedOfficials = oRows  || [];
 }
 
-function loadResults()  { return _cachedResults; }
-function loadAthletes() { return _cachedAthletes; }
+function loadResults()   { return _cachedResults; }
+function loadAthletes()  { return _cachedAthletes; }
+function loadOfficials() { return _cachedOfficials; }
 
 function athleteName(id) {
   const a = _cachedAthletes.find(a => a.athlete_id === id);
@@ -774,6 +881,162 @@ document.getElementById('editAthleteModal').addEventListener('click', e => {
 // ══════════════════════════════════════════
 // EXPORT
 // ══════════════════════════════════════════
+// ══════════════════════════════════════════
+// OFFICIALS
+// ══════════════════════════════════════════
+let selectedOfficial = null;
+
+function renderOfficials() {
+  const q = (document.getElementById('officialsSearch')?.value || '').toLowerCase().trim();
+  const results = loadResults(); // all, including voided
+  const empty = document.getElementById('officials-empty');
+
+  // Group by official_id
+  const map = {};
+  results.forEach(r => {
+    const key = r.official_id || '(unknown)';
+    if (!map[key]) map[key] = { id: key, pullup: 0, dash: 0, jump: 0, total: 0, lastTs: null, rows: [] };
+    map[key][r.event] = (map[key][r.event] || 0) + 1;
+    map[key].total++;
+    if (!map[key].lastTs || r.timestamp > map[key].lastTs) map[key].lastTs = r.timestamp;
+    map[key].rows.push(r);
+  });
+
+  let officials = Object.values(map).sort((a, b) => (b.lastTs || '').localeCompare(a.lastTs || ''));
+  if (q) officials = officials.filter(o => o.id.toLowerCase().includes(q));
+
+  const tbody = document.getElementById('tbody-officials-summary');
+  if (!officials.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    closeOfficialDetail();
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = officials.map(o => `
+    <tr style="cursor:pointer;" onclick="showOfficialDetail('${o.id.replace(/'/g,"\\'")}')">
+      <td><strong>${o.id}</strong></td>
+      <td>${o.pullup || '—'}</td>
+      <td>${o.dash   || '—'}</td>
+      <td>${o.jump   || '—'}</td>
+      <td><strong>${o.total}</strong></td>
+      <td class="ts">${fmtTime(o.lastTs)}</td>
+      <td><button class="btn-edit" onclick="event.stopPropagation();showOfficialDetail('${o.id.replace(/'/g,"\\'")}')">View</button></td>
+    </tr>`).join('');
+
+  // Re-render detail if one is open
+  if (selectedOfficial) showOfficialDetail(selectedOfficial);
+
+  renderManagedOfficials();
+}
+
+function showOfficialDetail(officialId) {
+  selectedOfficial = officialId;
+  const results = loadResults().filter(r => (r.official_id || '(unknown)') === officialId);
+  document.getElementById('official-detail-name').textContent = `Results entered by: ${officialId}`;
+  document.getElementById('official-detail').style.display = 'block';
+  document.getElementById('tbody-official-detail').innerHTML = results.map(r => `
+    <tr class="${r.voided ? 'voided' : ''}">
+      <td class="ts">${fmtTime(r.timestamp)}</td>
+      <td class="mono">${r.athlete_id}</td>
+      <td>${athleteName(r.athlete_id)}</td>
+      <td>${EVENT_LABELS[r.event] || r.event}</td>
+      <td>#${r.attempt_num}</td>
+      <td><strong>${r.value}</strong> ${EVENT_UNITS[r.event]}</td>
+      <td>${r.score ?? '—'}</td>
+      <td>${r.voided
+        ? '<span style="color:#dc2626;font-weight:700;font-size:0.72rem;">Voided</span>'
+        : '<span style="color:#16a34a;font-weight:700;font-size:0.72rem;">Active</span>'}</td>
+    </tr>`).join('');
+}
+
+function closeOfficialDetail() {
+  selectedOfficial = null;
+  document.getElementById('official-detail').style.display = 'none';
+  document.getElementById('tbody-official-detail').innerHTML = '';
+}
+
+// ── Managed officials (from dc_officials table) ──
+function renderManagedOfficials() {
+  const officials = loadOfficials();
+  const tbody = document.getElementById('tbody-officials-managed');
+  const empty = document.getElementById('officials-managed-empty');
+  if (!officials.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = officials.map(o => `
+    <tr>
+      <td><strong>${o.name}</strong></td>
+      <td><code style="background:var(--gray-light);padding:2px 6px;border-radius:4px;font-size:0.82rem;">${o.passcode}</code></td>
+      <td class="ts">${o.created_at ? new Date(o.created_at).toLocaleDateString() : '—'}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn-edit" onclick="openEditOfficial('${o.id}')">Edit</button>
+        <button class="btn-void" style="margin-left:4px;" onclick="deleteOfficial('${o.id}', '${o.name.replace(/'/g,"\\'")}')">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+let editingOfficialId = null;
+
+function openAddOfficial() {
+  editingOfficialId = null;
+  document.getElementById('officialModalTitle').textContent = 'Add Official';
+  document.getElementById('officialName').value = '';
+  document.getElementById('officialPasscode').value = '';
+  document.getElementById('officialModal').classList.add('open');
+  setTimeout(() => document.getElementById('officialName').focus(), 50);
+}
+
+function openEditOfficial(uuid) {
+  const o = _cachedOfficials.find(o => o.id === uuid);
+  if (!o) return;
+  editingOfficialId = uuid;
+  document.getElementById('officialModalTitle').textContent = 'Edit Official';
+  document.getElementById('officialName').value = o.name;
+  document.getElementById('officialPasscode').value = o.passcode;
+  document.getElementById('officialModal').classList.add('open');
+  setTimeout(() => document.getElementById('officialName').focus(), 50);
+}
+
+function closeOfficialModal() {
+  document.getElementById('officialModal').classList.remove('open');
+  editingOfficialId = null;
+}
+
+async function saveOfficial() {
+  const name = document.getElementById('officialName').value.trim();
+  const passcode = document.getElementById('officialPasscode').value.trim();
+  if (!name || !passcode) { alert('Name and passcode are required.'); return; }
+  const sb = getSB();
+  let error;
+  if (editingOfficialId) {
+    ({ error } = await sb.from('dc_officials').update({ name, passcode }).eq('id', editingOfficialId));
+  } else {
+    ({ error } = await sb.from('dc_officials').insert({ event_id: EVENT_ID, name, passcode }));
+  }
+  if (error) { alert('Save failed: ' + error.message); return; }
+  closeOfficialModal();
+  await reloadData();
+  renderOfficials();
+}
+
+async function deleteOfficial(uuid, name) {
+  if (!confirm(`Remove official "${name}"? They will no longer be able to log in.`)) return;
+  const sb = getSB();
+  const { error } = await sb.from('dc_officials').delete().eq('id', uuid);
+  if (error) { alert('Delete failed: ' + error.message); return; }
+  await reloadData();
+  renderOfficials();
+}
+
+document.getElementById('officialModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeOfficialModal();
+});
+
 function toCSV(rows, headers) {
   const lines = [headers.join(',')];
   rows.forEach(row => lines.push(row.map(v => `"${String(v ?? '').replace(/"/g,'""')}"`).join(',')));
@@ -841,6 +1104,7 @@ async function renderAll() {
   renderRecent();
   renderResults();
   renderAthletes();
+  renderOfficials();
 }
 
 // Also update the label on the clear button to reflect Supabase

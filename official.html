@@ -476,20 +476,59 @@ let attempts = {};
 // ════════════════════════════════════════════
 // AUTH
 // ════════════════════════════════════════════
-const PASSCODE = 'realfit2026';
+const PASSCODE = 'realfit2026'; // fallback hardcoded passcode (accepts any official name)
 let currentOfficialId = '';
 
-function doLogin() {
-  const pass = document.getElementById('passcode').value;
+async function doLogin() {
+  const pass = document.getElementById('passcode').value.trim();
   const oid  = document.getElementById('officialIdInput').value.trim();
-  if (pass === PASSCODE && oid.length > 0) {
-    currentOfficialId = oid;
-    document.getElementById('login-screen').style.display = 'none';
-    // Show official ID in header
-    document.getElementById('officialLabel').textContent = oid;
-    initScanner();
-  } else {
-    document.getElementById('login-error').style.display = 'block';
+  if (!pass || !oid) { document.getElementById('login-error').style.display = 'block'; return; }
+
+  const btn = document.querySelector('#login-screen button');
+  btn.textContent = 'Checking…';
+  btn.disabled = true;
+
+  try {
+    const sb = getSB();
+    // Check dc_officials table first
+    const { data: officials } = await sb.from('dc_officials')
+      .select('name, passcode')
+      .eq('event_id', EVENT_ID);
+
+    let authorized = false;
+    let resolvedName = oid;
+
+    if (officials && officials.length > 0) {
+      // Match by passcode; official name comes from the table row
+      const match = officials.find(o => o.passcode === pass);
+      if (match) { authorized = true; resolvedName = match.name; }
+    } else {
+      // No officials configured yet — fall back to hardcoded passcode
+      if (pass === PASSCODE) authorized = true;
+    }
+
+    if (authorized) {
+      currentOfficialId = resolvedName;
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('officialLabel').textContent = resolvedName;
+      initScanner();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+      btn.textContent = 'Enter →';
+      btn.disabled = false;
+    }
+  } catch(err) {
+    // Network error — fall back to hardcoded passcode
+    if (pass === PASSCODE && oid.length > 0) {
+      currentOfficialId = oid;
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('officialLabel').textContent = oid;
+      initScanner();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+      btn.textContent = 'Enter →';
+      btn.disabled = false;
+    }
   }
 }
 
