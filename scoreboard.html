@@ -697,16 +697,22 @@ function refresh() {
 function initRealtime() {
   try {
     const sb = getSB();
-    sb.channel(`scoreboard-${EVENT_ID}`)
+    const channel = sb.channel(`scoreboard-${EVENT_ID}`)
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'dc_results',
         filter: `event_id=eq.${EVENT_ID}`
-      }, () => refresh())
+      }, () => { console.log('Realtime: dc_results change'); refresh(); })
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'dc_athletes',
         filter: `event_id=eq.${EVENT_ID}`
-      }, () => refresh())
-      .subscribe();
+      }, () => { console.log('Realtime: dc_athletes change'); refresh(); })
+      .subscribe((status) => {
+        console.log('Realtime status:', status);
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn('Realtime failed, falling back to polling');
+          setInterval(refresh, REFRESH_INTERVAL_MS);
+        }
+      });
   } catch(e) {
     console.warn('Realtime unavailable, falling back to polling:', e);
     setInterval(refresh, REFRESH_INTERVAL_MS);
