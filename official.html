@@ -146,6 +146,18 @@
       text-transform: uppercase; background: var(--accent);
       color: var(--white); padding: 2px 8px; border-radius: 10px;
     }
+    .btn-void-attempt {
+      margin-left: auto;
+      font-size: 0.65rem; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; background: none;
+      color: #dc2626; border: 1px solid #dc2626; padding: 2px 8px;
+      border-radius: 10px; cursor: pointer; opacity: 0.55;
+      transition: opacity 0.15s;
+    }
+    .btn-void-attempt:hover { opacity: 1; }
+    .attempt-row.voided {
+      opacity: 0.4; text-decoration: line-through;
+    }
 
     /* ── New attempt input ── */
     .new-attempt-row {
@@ -513,6 +525,62 @@ async function persistAttempt(athleteId, eventId, attemptNum, value) {
     alert('Save exception: ' + e.message);
     console.error('persistAttempt exception:', e);
   }
+}
+
+async function voidAttempt(eventId, attemptIndex) {
+  if (!confirm(`Void Attempt ${attemptIndex + 1}? This will remove it so you can re-enter the correct value.`)) return;
+
+  const cfg = EVENT_CONFIG.find(e => e.id === eventId);
+  const val = attempts[eventId][attemptIndex];
+  const attemptNum = attemptIndex + 1;
+
+  // Mark voided in Supabase
+  try {
+    const sb = getSB();
+    await sb.from('dc_results')
+      .update({ voided: true })
+      .eq('event_id', EVENT_ID)
+      .eq('athlete_id', currentAthlete)
+      .eq('event', eventId)
+      .eq('attempt_num', attemptNum);
+  } catch(e) {
+    console.warn('voidAttempt DB error:', e);
+  }
+
+  // Remove from local state and renumber remaining attempts
+  attempts[eventId].splice(attemptIndex, 1);
+
+  // If there are rows after the voided one in DB, renumber them too
+  // (Simplest: re-persist remaining attempts with correct attempt_num)
+  // For demo purposes we just delete and re-insert the survivors
+  try {
+    const sb = getSB();
+    // Void all attempts for this athlete/event, then re-persist survivors
+    await sb.from('dc_results')
+      .update({ voided: true })
+      .eq('event_id', EVENT_ID)
+      .eq('athlete_id', currentAthlete)
+      .eq('event', eventId);
+
+    // Re-persist remaining attempts with correct sequence
+    for (let i = 0; i < attempts[eventId].length; i++) {
+      await persistAttempt(currentAthlete, eventId, i + 1, attempts[eventId][i]);
+    }
+  } catch(e) {
+    console.warn('voidAttempt renumber error:', e);
+  }
+
+  // Rebuild block
+  const oldBlock = document.getElementById(`block-${eventId}`);
+  const newBlock = buildEventBlock(cfg);
+  oldBlock.parentNode.replaceChild(newBlock, oldBlock);
+
+  // Keep body open so official can add the corrected value
+  document.getElementById(`body-${eventId}`).style.display = 'block';
+  const input = document.getElementById(`input-${eventId}`);
+  if (input) setTimeout(() => input.focus(), 50);
+
+  addToLog(currentAthlete, cfg, val, attemptNum, false, true /* voided */);
 }
 
 // ════════════════════════════════════════════
@@ -897,7 +965,9 @@ function buildAttemptRow(cfg, val, index, best) {
     <span class="attempt-value">${displayVal}</span>
     <span class="attempt-score">· ${score} pts</span>
     ${isBest ? '<span class="best-tag">Best</span>' : ''}
+    <button class="btn-void-attempt" title="Void this attempt (correct a data entry error)">✕ Void</button>
   `;
+  row.querySelector('.btn-void-attempt').addEventListener('click', () => voidAttempt(cfg.id, index));
   return row;
 }
 
@@ -1000,7 +1070,7 @@ function checkDCS() {
 // ════════════════════════════════════════════
 // SESSION LOG
 // ════════════════════════════════════════════
-function addToLog(athleteId, cfg, raw, attemptNum, isBest) {
+function addToLog(athleteId, cfg, raw, attemptNum, isBest, voided = false) {
   const log = document.getElementById('certLog');
   if (log.textContent.includes('No entries')) log.innerHTML = '';
   const displayVal = `${raw}${cfg.unit === 'reps' ? ' reps' : cfg.unit === 'sec' ? 's' : '"'}`;
@@ -1008,13 +1078,14 @@ function addToLog(athleteId, cfg, raw, attemptNum, isBest) {
   const row = document.createElement('div');
   row.className = 'cert-log-row';
   row.innerHTML = `
-    <span>
+    <span ${voided ? 'style="opacity:0.5;text-decoration:line-through"' : ''}>
       <strong style="color:var(--brand);">${athleteId}</strong>
       · ${cfg.name} Attempt ${attemptNum}
     </span>
-    <span>
-      <strong style="color:var(--accent);">${displayVal}</strong>
-      ${isBest && attemptNum > 1 ? '<span style="color:#16a34a;font-weight:700;"> ★ best</span>' : ''}
+    <span ${voided ? 'style="opacity:0.5;text-decoration:line-through"' : ''}>
+      <strong style="color:${voided ? '#dc2626' : 'var(--accent)'};">${displayVal}</strong>
+      ${voided ? '<span style="color:#dc2626;font-weight:700;"> ✕ voided</span>' : ''}
+      ${isBest && attemptNum > 1 && !voided ? '<span style="color:#16a34a;font-weight:700;"> ★ best</span>' : ''}
       <span style="color:var(--gray);margin-left:6px;">${time}</span>
     </span>
   `;
