@@ -685,8 +685,8 @@ let _cachedDemoCodes = [];
 async function reloadData() {
   const sb = getSB();
   const [{ data: rRows, error: rErr }, { data: aRows, error: aErr }, { data: oRows, error: oErr }, { data: dRows, error: dErr }] = await Promise.all([
-    sb.from('dc_results').select('*').eq('event_id', EVENT_ID).order('timestamp', { ascending: false }),
-    sb.from('dc_athletes').select('*').eq('event_id', EVENT_ID).order('registered_at', { ascending: true }),
+    sb.from('dc_results').select('*').or(`event_id.eq.${EVENT_ID},event_id.like.demo-%`).order('timestamp', { ascending: false }),
+    sb.from('dc_athletes').select('*').or(`event_id.eq.${EVENT_ID},event_id.like.demo-%`).order('registered_at', { ascending: true }),
     sb.from('dc_officials').select('*').eq('event_id', EVENT_ID).order('created_at', { ascending: true }),
     sb.from('dc_demo_codes').select('*').order('created_at', { ascending: false })
   ]);
@@ -865,7 +865,7 @@ function renderAthletes() {
       <td>${statusPill}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap;">
         <button class="btn-edit" onclick="openAthleteEdit('${a.id}')">Edit</button>
-        <button class="btn-xs btn-danger-outline" onclick="deleteAthlete(this)" data-uuid="${a.id}" data-aid="${a.athlete_id}" data-name="${a.first_name} ${a.last_name}">Delete</button>
+        <button class="btn-xs btn-danger-outline" onclick="deleteAthlete(this)" data-uuid="${a.id}" data-aid="${a.athlete_id}" data-eid="${a.event_id}" data-name="${a.first_name} ${a.last_name}">Delete</button>
       </td>
     </tr>`;
   }).join('');
@@ -982,6 +982,7 @@ document.getElementById('editAthleteModal').addEventListener('click', e => {
 async function deleteAthlete(btn) {
   const uuid      = btn.dataset.uuid;
   const athleteId = btn.dataset.aid;
+  const eventId   = btn.dataset.eid;
   const name      = btn.dataset.name;
 
   // Two-click confirm: first click shows "Sure?" state, second executes
@@ -1006,9 +1007,9 @@ async function deleteAthlete(btn) {
   btn.textContent = 'Deleting…';
   btn.disabled = true;
   const sb = getSB();
-  const { error: resErr } = await sb.from('dc_results').delete().eq('event_id', EVENT_ID).eq('athlete_id', athleteId);
+  const { error: resErr } = await sb.from('dc_results').delete().eq('event_id', eventId).eq('athlete_id', athleteId);
   console.log('deleteAthlete results delete:', resErr || 'ok');
-  const { error } = await sb.from('dc_athletes').delete().eq('id', uuid).eq('event_id', EVENT_ID);
+  const { error } = await sb.from('dc_athletes').delete().eq('id', uuid).eq('event_id', eventId);
   console.log('deleteAthlete athlete delete:', error || 'ok');
   if (error) { alert('Delete failed: ' + error.message); btn.textContent = 'Delete'; btn.disabled = false; return; }
   await reloadData();
