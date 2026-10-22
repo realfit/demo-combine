@@ -289,6 +289,7 @@
   <div class="login-card">
     <div style="font-family:var(--display);font-size:1.4rem;font-weight:900;margin-bottom:4px;">Official Access</div>
     <p>Enter the event passcode and your official ID.</p>
+    <div id="passcode-row">
     <input type="password" id="passcode" placeholder="Event passcode"
            onkeydown="if(event.key==='Enter')document.getElementById('officialIdInput').focus()"
            style="margin-bottom:6px;">
@@ -296,6 +297,7 @@
       <input type="checkbox" style="width:14px;height:14px;flex-shrink:0;" onchange="document.getElementById('passcode').type=this.checked?'text':'password'">
       Show password
     </label>
+    </div>
     <input type="text" id="officialIdInput" placeholder="Your name or ID (e.g. J. Martinez)"
            onkeydown="if(event.key==='Enter')doLogin()"
            style="margin-bottom:14px;">
@@ -549,9 +551,35 @@ let currentOfficialId = '';
 function activateDemoMode() {
   document.getElementById('demo-banner').style.display = 'block';
   document.getElementById('demo-gate-screen').style.display = 'none';
-  // Pre-fill official name hint for demo users
+
+  // Demo users don't have a passcode — hide the passcode field and relabel the login screen
+  const passRow = document.getElementById('passcode-row');
+  if (passRow) passRow.style.display = 'none';
+  const loginTitle = document.querySelector('#login-screen .login-card div[style*="font-family"]');
+  if (loginTitle) loginTitle.textContent = 'Enter Your Name';
+  const loginSubtitle = document.querySelector('#login-screen .login-card p');
+  if (loginSubtitle) loginSubtitle.textContent = 'Enter your name to start entering results.';
   const nameInput = document.getElementById('officialIdInput');
-  if (nameInput && !nameInput.value) nameInput.placeholder = 'Your name (you are your own official)';
+  if (nameInput) {
+    nameInput.placeholder = 'Your name (e.g. Alex Smith)';
+    // Allow Enter directly from name field
+    nameInput.onkeydown = (e) => { if (e.key === 'Enter') demoLogin(); };
+  }
+  const loginBtn = document.querySelector('#login-screen button[onclick="doLogin()"]');
+  if (loginBtn) loginBtn.setAttribute('onclick', 'demoLogin()');
+}
+
+function demoLogin() {
+  const oid = document.getElementById('officialIdInput').value.trim();
+  if (!oid) {
+    document.getElementById('login-error').textContent = 'Please enter your name.';
+    document.getElementById('login-error').style.display = 'block';
+    return;
+  }
+  currentOfficialId = oid;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('officialLabel').textContent = oid;
+  initScanner();
 }
 
 async function checkDemoCode() {
