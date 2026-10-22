@@ -794,7 +794,7 @@ footer a:hover { color: #fff; }
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
         <div>
-          <h3>Enter Your Own Results</h3>
+          <h3>Try Out the Entire Scoring Process</h3>
           <p>Register as an athlete, then use your demo code to act as your own official — scan your QR and enter your results. See yourself rank live against our benchmark athletes.</p>
         </div>
       </div>
@@ -808,10 +808,6 @@ footer a:hover { color: #fff; }
             <label for="demoEmail">Email Address *</label>
             <input type="email" id="demoEmail" placeholder="you@example.com" required autocomplete="email">
           </div>
-        </div>
-        <div class="demo-field">
-          <label for="demoOrg">Organization <span style="font-weight:400;opacity:.6;">(optional)</span></label>
-          <input type="text" id="demoOrg" placeholder="Team, school, or company">
         </div>
         <div class="demo-error" id="demoError"></div>
         <button class="demo-submit" type="submit" id="demoSubmitBtn">
@@ -855,7 +851,6 @@ async function submitDemoRequest(e) {
       body: JSON.stringify({
         name:  document.getElementById('demoName').value.trim(),
         email,
-        org:   document.getElementById('demoOrg').value.trim() || null,
       }),
     });
     const data = await res.json();
