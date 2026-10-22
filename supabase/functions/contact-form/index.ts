@@ -16,13 +16,11 @@ const RESEND_API_KEY       = Deno.env.get('RESEND_API_KEY')!
 const FROM_EMAIL  = 'REALFIT Website <noreply@mail.realfit.com>'
 const NOTIFY_TO   = 'combines@realfit.com'
 
-function cors(origin: string | null) {
-  const allowed = ['https://scoremycombine.com', 'https://www.scoremycombine.com']
-  const allow   = origin && allowed.includes(origin) ? origin : allowed[0]
+function cors(_origin: string | null) {
   return {
-    'Access-Control-Allow-Origin':  allow,
+    'Access-Control-Allow-Origin':  '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey',
   }
 }
 
@@ -51,6 +49,38 @@ function notifyHtml(name: string, org: string, email: string, message: string): 
       </div>
       <div style="border-top:1px solid #eee;margin-top:24px;padding-top:16px;font-size:.75rem;color:#9ca3af;">
         Submitted via scoremycombine.com · ${new Date().toUTCString()}
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+}
+
+function confirmHtml(name: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="font-family:system-ui,sans-serif;background:#f5f5f5;margin:0;padding:32px 16px;">
+  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <div style="background:#111;padding:28px 32px;">
+      <div style="font-size:1.4rem;font-weight:800;color:#fff;letter-spacing:-.5px;">REALFIT</div>
+      <div style="color:#aaa;font-size:.85rem;margin-top:4px;">ScoreMyCombine</div>
+    </div>
+    <div style="padding:32px;">
+      <p style="margin:0 0 16px;font-size:1rem;color:#111;">Hi ${name},</p>
+      <p style="margin:0 0 24px;color:#444;line-height:1.6;">
+        Thanks for reaching out. We received your message and will be in touch promptly.
+      </p>
+      <p style="margin:0 0 24px;color:#444;line-height:1.6;">
+        In the meantime, you're welcome to try the REALFIT demo combine — the full athlete, official, and scoreboard experience in under five minutes.
+      </p>
+      <a href="https://demo.scoremycombine.com"
+         style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:14px 24px;border-radius:8px;font-weight:700;font-size:.95rem;">
+        Try the Demo →
+      </a>
+      <div style="border-top:1px solid #eee;padding-top:20px;margin-top:32px;font-size:.8rem;color:#999;line-height:1.6;">
+        Questions? Reply to this email or reach us at
+        <a href="mailto:combines@realfit.com" style="color:#2563eb;">combines@realfit.com</a>
       </div>
     </div>
   </div>
@@ -124,9 +154,22 @@ Deno.serve(async (req: Request) => {
   if (!emailRes.ok) {
     const emailErr = await emailRes.text()
     console.error('Resend error:', emailErr)
-    // Submission is saved in DB — don't fail the user response
-    // but log for ops visibility
   }
+
+  // 3. Send confirmation email to the submitter
+  await fetch('https://api.resend.com/emails', {
+    method:  'POST',
+    headers: {
+      'Authorization': `Bearer ${RESEND_API_KEY}`,
+      'Content-Type':  'application/json',
+    },
+    body: JSON.stringify({
+      from:    FROM_EMAIL,
+      to:      [email.trim()],
+      subject: 'We received your message — REALFIT',
+      html:    confirmHtml(name.trim()),
+    }),
+  })
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200, headers: { 'Content-Type': 'application/json', ...cors(origin) }
