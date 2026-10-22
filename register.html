@@ -210,6 +210,27 @@ async function handleRegister(e) {
     return;
   }
 
+  // ── Send confirmation email with athlete ID + QR ──
+  btn.textContent = 'Sending confirmation…';
+  try {
+    await fetch(`${SUPABASE_EDGE_URL}/send-registration-confirm`, {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+      },
+      body: JSON.stringify({
+        name:      `${data.firstName} ${data.lastName}`,
+        email:     data.email,
+        athleteId: athleteId,
+        eventId:   EVENT_ID,
+      }),
+    });
+  } catch (err) {
+    // Non-fatal — athlete is registered, email just didn't send
+    console.warn('Confirmation email failed:', err);
+  }
+
   window.location.href = `confirm.html?id=${athleteId}`;
 }
 </script>
