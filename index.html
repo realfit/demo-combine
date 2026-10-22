@@ -850,7 +850,7 @@ async function submitDemoRequest(e) {
   try {
     const res = await fetch(SUPABASE_EDGE_URL, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON}` },
       body: JSON.stringify({
         name:  document.getElementById('demoName').value.trim(),
         email,
