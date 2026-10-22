@@ -983,11 +983,29 @@ async function deleteAthlete(btn) {
   const uuid      = btn.dataset.uuid;
   const athleteId = btn.dataset.aid;
   const name      = btn.dataset.name;
-  if (!confirm(`Delete ${name} (${athleteId})?\n\nThis will permanently remove the athlete and all their results. This cannot be undone.`)) return;
+
+  // Two-click confirm: first click shows "Sure?" state, second executes
+  if (btn.dataset.confirming !== 'yes') {
+    btn.dataset.confirming = 'yes';
+    btn.textContent = 'Sure?';
+    btn.style.background = '#dc2626';
+    btn.style.color = '#fff';
+    btn.style.borderColor = '#dc2626';
+    setTimeout(() => {
+      if (btn.dataset.confirming === 'yes') {
+        btn.dataset.confirming = '';
+        btn.textContent = 'Delete';
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+      }
+    }, 3000);
+    return;
+  }
+
   btn.textContent = 'Deleting…';
   btn.disabled = true;
   const sb = getSB();
-  // Delete results first, then athlete row
   const { error: resErr } = await sb.from('dc_results').delete().eq('event_id', EVENT_ID).eq('athlete_id', athleteId);
   if (resErr) console.warn('deleteAthlete results error:', resErr);
   const { error } = await sb.from('dc_athletes').delete().eq('id', uuid);
