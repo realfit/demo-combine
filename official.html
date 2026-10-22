@@ -301,7 +301,7 @@
     <input type="text" id="officialIdInput" placeholder="Your name or ID (e.g. J. Martinez)"
            onkeydown="if(event.key==='Enter')doLogin()"
            style="margin-bottom:14px;">
-    <button onclick="doLogin()">Enter →</button>
+    <button onclick="doLogin()">Start Scoring →</button>
     <div class="login-error" id="login-error">Incorrect passcode or missing ID.</div>
   </div>
 </div>
@@ -556,9 +556,9 @@ function activateDemoMode() {
   const passRow = document.getElementById('passcode-row');
   if (passRow) passRow.style.display = 'none';
   const loginTitle = document.querySelector('#login-screen .login-card div[style*="font-family"]');
-  if (loginTitle) loginTitle.textContent = 'Enter Your Name';
+  if (loginTitle) loginTitle.textContent = 'You\'re Now the Official';
   const loginSubtitle = document.querySelector('#login-screen .login-card p');
-  if (loginSubtitle) loginSubtitle.textContent = 'Enter your name to start entering results.';
+  if (loginSubtitle) loginSubtitle.textContent = 'We\'ve pre-filled your official name below. Edit it if you\'d like, then start scoring.';
   const nameInput = document.getElementById('officialIdInput');
   if (nameInput) {
     nameInput.placeholder = 'Your name (e.g. Alex Smith)';
@@ -664,7 +664,7 @@ async function doLogin() {
       initScanner();
     } else {
       document.getElementById('login-error').style.display = 'block';
-      btn.textContent = 'Enter →';
+      btn.textContent = 'Start Scoring →';
       btn.disabled = false;
     }
   } catch(err) {
@@ -676,7 +676,7 @@ async function doLogin() {
       initScanner();
     } else {
       document.getElementById('login-error').style.display = 'block';
-      btn.textContent = 'Enter →';
+      btn.textContent = 'Start Scoring →';
       btn.disabled = false;
     }
   }
