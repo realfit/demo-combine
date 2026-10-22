@@ -47,7 +47,7 @@ function emailHtml(name: string, athleteId: string, eventId: string): string {
            style="display:block;text-align:center;background:#111;color:#fff;text-decoration:none;padding:16px;border-radius:8px;font-weight:700;font-size:1rem;">
           Enter Your Results as Official →
         </a>
-        <div style="font-size:.78rem;color:#888;text-align:center;margin-top:8px;">Use your demo code to log in, then scan your QR code below</div>
+        <div style="font-size:.78rem;color:#888;text-align:center;margin-top:8px;">Your name is pre-filled — just scan your QR code to enter your results</div>
       </div>
 
       <!-- Athlete ID -->
