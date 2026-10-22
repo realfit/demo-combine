@@ -562,8 +562,10 @@ function activateDemoMode() {
   const nameInput = document.getElementById('officialIdInput');
   if (nameInput) {
     nameInput.placeholder = 'Your name (e.g. Alex Smith)';
-    // Allow Enter directly from name field
     nameInput.onkeydown = (e) => { if (e.key === 'Enter') demoLogin(); };
+    // Prefill from ?name= URL param (set by the demo access email link)
+    const prefill = new URLSearchParams(window.location.search).get('name');
+    if (prefill) nameInput.value = decodeURIComponent(prefill);
   }
   const loginBtn = document.querySelector('#login-screen button[onclick="doLogin()"]');
   if (loginBtn) loginBtn.setAttribute('onclick', 'demoLogin()');
