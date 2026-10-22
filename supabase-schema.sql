@@ -177,3 +177,22 @@ create policy "events_anon_delete"  on events for delete using (true);
 -- To unschedule:
 --   select cron.unschedule('cleanup-expired-demo-sessions');
 --   select cron.unschedule('cleanup-expired-demo-codes');
+
+-- ============================================================
+-- CONTACT SUBMISSIONS
+-- Stores inquiries from scoremycombine.com contact form
+-- ============================================================
+
+create table if not exists contact_submissions (
+  id           uuid primary key default gen_random_uuid(),
+  name         text not null,
+  organization text not null default '',
+  email        text not null,
+  message      text not null default '',
+  source       text not null default 'scoremycombine.com',
+  created_at   timestamptz not null default now()
+);
+
+-- Only the service role (Edge Function) can insert; no public access
+alter table contact_submissions enable row level security;
+-- No RLS policies = only service role key can read/write
