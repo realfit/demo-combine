@@ -795,7 +795,7 @@ footer a:hover { color: #fff; }
         </div>
         <div>
           <h3>Try Out the Entire Scoring Process</h3>
-          <p>Register as an athlete, then use your demo code to act as your own official — scan your QR and enter your results. See yourself rank live against our benchmark athletes.</p>
+          <p>Register as an athlete, then step into the official's role to enter your own results. See yourself rank live against our benchmark athletes.</p>
         </div>
       </div>
       <form class="demo-form" id="demoRequestForm" onsubmit="submitDemoRequest(event)">
@@ -812,7 +812,7 @@ footer a:hover { color: #fff; }
         <div class="demo-error" id="demoError"></div>
         <button class="demo-submit" type="submit" id="demoSubmitBtn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-          Send My Demo Code
+          Get Demo Access
         </button>
       </form>
       <div class="demo-success" id="demoSuccess">
@@ -820,7 +820,7 @@ footer a:hover { color: #fff; }
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
         <h4>Check your email!</h4>
-        <p>Your 6-digit demo code is on its way to <strong id="demoSuccessEmail"></strong>.<br>Use it on the Official page to enter your results.</p>
+        <p>Your demo access link is on its way to <strong id="demoSuccessEmail"></strong>.<br>Check your inbox — three steps get you to the live scoreboard.</p>
       </div>
     </div>
   </div>
@@ -862,7 +862,7 @@ async function submitDemoRequest(e) {
     err.textContent = ex.message || 'Something went wrong. Please try again.';
     err.style.display = 'block';
     btn.disabled = false;
-    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg> Send My Demo Code';
+    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg> Get Demo Access';
   }
 }
 </script>
