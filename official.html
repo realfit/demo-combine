@@ -721,7 +721,9 @@ function resetToScanner() {
   currentAthleteName = '';
   attempts = {};
   document.getElementById('athleteCard').classList.remove('visible');
-  document.getElementById('manualId').value = '';
+  // Prefill athlete ID from ?prefill= URL param (set by athlete confirmation email)
+  const prefillId = new URLSearchParams(window.location.search).get('prefill');
+  document.getElementById('manualId').value = prefillId ? prefillId.toUpperCase() : '';
   document.querySelector('.scan-box').scrollIntoView({ behavior: 'smooth' });
   // Small delay so DOM scrolls before camera reinits
   setTimeout(() => {

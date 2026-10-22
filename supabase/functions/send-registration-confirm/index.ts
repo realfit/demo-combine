@@ -21,7 +21,7 @@ function emailHtml(name: string, athleteId: string, eventId: string): string {
   const confirmUrl    = `${DEMO_SITE_URL}/confirm.html?id=${athleteId}&event=${eventId}`
   const scoreboardUrl = `${DEMO_SITE_URL}/scoreboard.html?event=${eventId}`
   const officialName  = encodeURIComponent(`${name} (Official)`)
-  const officialUrl   = `${DEMO_SITE_URL}/official.html?event=${eventId}&name=${officialName}`
+  const officialUrl   = `${DEMO_SITE_URL}/official.html?event=${eventId}&name=${officialName}&prefill=${athleteId}`
 
   // QR image via quickchart.io — encodes the athlete URL the scanner reads
   const qrData       = encodeURIComponent(`${DEMO_SITE_URL}/athlete?id=${athleteId}`)
