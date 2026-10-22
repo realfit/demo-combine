@@ -1007,8 +1007,9 @@ async function deleteAthlete(btn) {
   btn.disabled = true;
   const sb = getSB();
   const { error: resErr } = await sb.from('dc_results').delete().eq('event_id', EVENT_ID).eq('athlete_id', athleteId);
-  if (resErr) console.warn('deleteAthlete results error:', resErr);
-  const { error } = await sb.from('dc_athletes').delete().eq('id', uuid);
+  console.log('deleteAthlete results delete:', resErr || 'ok');
+  const { error } = await sb.from('dc_athletes').delete().eq('id', uuid).eq('event_id', EVENT_ID);
+  console.log('deleteAthlete athlete delete:', error || 'ok');
   if (error) { alert('Delete failed: ' + error.message); btn.textContent = 'Delete'; btn.disabled = false; return; }
   await reloadData();
   renderAll();
