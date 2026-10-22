@@ -1007,10 +1007,13 @@ async function deleteAthlete(btn) {
   btn.textContent = 'Deleting…';
   btn.disabled = true;
   const sb = getSB();
-  const { error: resErr } = await sb.from('dc_results').delete().eq('event_id', eventId).eq('athlete_id', athleteId);
-  console.log('deleteAthlete results delete:', resErr || 'ok');
-  const { error } = await sb.from('dc_athletes').delete().eq('id', uuid).eq('event_id', eventId);
-  console.log('deleteAthlete athlete delete:', error || 'ok');
+  console.log('deleteAthlete PARAMS → uuid:', uuid, '| athleteId:', athleteId, '| eventId:', eventId);
+
+  const { error: resErr, count: resCount, data: resData } = await sb.from('dc_results').delete().eq('event_id', eventId).eq('athlete_id', athleteId).select();
+  console.log('deleteAthlete results delete:', resErr || 'ok', '| rows deleted:', resData?.length ?? '?', resData);
+
+  const { error, data: athData } = await sb.from('dc_athletes').delete().eq('id', uuid).eq('event_id', eventId).select();
+  console.log('deleteAthlete athlete delete:', error || 'ok', '| rows deleted:', athData?.length ?? '?', athData);
   if (error) { alert('Delete failed: ' + error.message); btn.textContent = 'Delete'; btn.disabled = false; return; }
   await reloadData();
   renderAll();
