@@ -178,7 +178,7 @@ Deno.serve(async (req: Request) => {
       'Content-Type':  'application/json',
     },
     body: JSON.stringify({
-      from:    `REALFIT Demo <${FROM_EMAIL}>`,
+      from:    FROM_EMAIL,
       to:      [email.trim()],
       subject: `Your ScoreMyCombine demo code: ${code}`,
       html:    emailHtml(name.trim(), code, eventId),
