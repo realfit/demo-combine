@@ -865,7 +865,7 @@ function renderAthletes() {
       <td>${statusPill}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap;">
         <button class="btn-edit" onclick="openAthleteEdit('${a.id}')">Edit</button>
-        <button class="btn-xs btn-danger-outline" onclick="deleteAthlete('${a.id}','${a.athlete_id}','${a.first_name} ${a.last_name}')">Delete</button>
+        <button class="btn-xs btn-danger-outline" onclick="deleteAthlete(this)" data-uuid="${a.id}" data-aid="${a.athlete_id}" data-name="${a.first_name} ${a.last_name}">Delete</button>
       </td>
     </tr>`;
   }).join('');
@@ -979,13 +979,19 @@ document.getElementById('editAthleteModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeAthleteModal();
 });
 
-async function deleteAthlete(uuid, athleteId, name) {
+async function deleteAthlete(btn) {
+  const uuid      = btn.dataset.uuid;
+  const athleteId = btn.dataset.aid;
+  const name      = btn.dataset.name;
   if (!confirm(`Delete ${name} (${athleteId})?\n\nThis will permanently remove the athlete and all their results. This cannot be undone.`)) return;
+  btn.textContent = 'Deleting…';
+  btn.disabled = true;
   const sb = getSB();
   // Delete results first, then athlete row
-  await sb.from('dc_results').delete().eq('event_id', EVENT_ID).eq('athlete_id', athleteId);
+  const { error: resErr } = await sb.from('dc_results').delete().eq('event_id', EVENT_ID).eq('athlete_id', athleteId);
+  if (resErr) console.warn('deleteAthlete results error:', resErr);
   const { error } = await sb.from('dc_athletes').delete().eq('id', uuid);
-  if (error) { alert('Delete failed: ' + error.message); return; }
+  if (error) { alert('Delete failed: ' + error.message); btn.textContent = 'Delete'; btn.disabled = false; return; }
   await reloadData();
   renderAll();
 }
