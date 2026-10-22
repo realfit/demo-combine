@@ -65,8 +65,11 @@ function emailHtml(name: string, code: string, eventId: string): string {
     </div>
     <div style="padding:32px;">
       <p style="margin:0 0 16px;font-size:1rem;color:#111;">Hi ${name},</p>
-      <p style="margin:0 0 24px;color:#444;line-height:1.6;">
-        Your demo access code is ready. Use it to log in as an official and enter your own results — then watch yourself rank live on the scoreboard.
+      <p style="margin:0 0 8px;color:#444;line-height:1.6;">
+        You're getting access to a live demo of the ScoreMyCombine platform. Here's the concept:
+      </p>
+      <p style="margin:0 0 24px;color:#444;line-height:1.6;background:#f8f8f8;border-left:3px solid #111;padding:12px 16px;border-radius:0 6px 6px 0;font-size:.9rem;">
+        In a real combine, only a certified REALFIT official can enter athlete results. In this demo, <strong>you play both roles</strong> — you register as an athlete, then step into the official's seat to enter your own results and watch yourself rank live.
       </p>
 
       <div style="background:#f0f0f0;border-radius:8px;padding:24px;text-align:center;margin-bottom:28px;">
@@ -75,15 +78,15 @@ function emailHtml(name: string, code: string, eventId: string): string {
         <div style="font-size:.75rem;color:#888;margin-top:8px;">Expires in ${DEMO_EXPIRY_HOURS} hours</div>
       </div>
 
-      <p style="margin:0 0 8px;font-weight:600;color:#111;font-size:.9rem;">Here's how to use your demo:</p>
-      <ol style="margin:0 0 28px;padding-left:20px;color:#444;line-height:2;">
-        <li><a href="${registerUrl}" style="color:#2563eb;">Register as an athlete</a> — takes 30 seconds</li>
-        <li><a href="${officialUrl}" style="color:#2563eb;">Enter your results</a> — use your demo code + scan your QR</li>
-        <li><a href="${scoreboardUrl}" style="color:#2563eb;">See yourself on the scoreboard</a> — live ranking against our benchmark athletes</li>
+      <p style="margin:0 0 8px;font-weight:600;color:#111;font-size:.9rem;">Three steps:</p>
+      <ol style="margin:0 0 28px;padding-left:20px;color:#444;line-height:2.2;">
+        <li><a href="${registerUrl}" style="color:#2563eb;font-weight:600;">Register as an athlete</a> — 30 seconds, gets you your QR code</li>
+        <li><a href="${officialUrl}" style="color:#2563eb;font-weight:600;">Step into the official role</a> — use your demo code, then scan your QR to enter results</li>
+        <li><a href="${scoreboardUrl}" style="color:#2563eb;font-weight:600;">See yourself on the scoreboard</a> — live ranking against benchmark athletes</li>
       </ol>
 
       <div style="border-top:1px solid #eee;padding-top:20px;font-size:.8rem;color:#999;line-height:1.6;">
-        This is a private demo session — your results are visible only on your personal scoreboard link and will be automatically removed after ${DEMO_EXPIRY_HOURS} hours.<br><br>
+        This is a private demo session. Your results are visible only on your personal scoreboard link and will be automatically removed after ${DEMO_EXPIRY_HOURS} hours.<br><br>
         Questions? Reply to this email or reach us at <a href="mailto:demo@realfit.com" style="color:#2563eb;">demo@realfit.com</a>
       </div>
     </div>

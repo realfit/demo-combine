@@ -38,12 +38,21 @@ function emailHtml(name: string, athleteId: string, eventId: string): string {
     <div style="padding:32px;">
       <p style="margin:0 0 16px;font-size:1rem;color:#111;">Hi ${name},</p>
       <p style="margin:0 0 24px;color:#444;line-height:1.6;">
-        You're registered! Here's your athlete ID and QR code — save this email. An official will scan your code to pull up your profile instantly.
+        You're registered as an athlete. Now for the fun part — <strong>step into the official's role and enter your own results.</strong>
       </p>
+
+      <!-- Next step CTA -->
+      <div style="margin-bottom:28px;">
+        <a href="${officialUrl}"
+           style="display:block;text-align:center;background:#111;color:#fff;text-decoration:none;padding:16px;border-radius:8px;font-weight:700;font-size:1rem;">
+          Enter Your Results as Official →
+        </a>
+        <div style="font-size:.78rem;color:#888;text-align:center;margin-top:8px;">Use your demo code to log in, then scan your QR code below</div>
+      </div>
 
       <!-- Athlete ID -->
       <div style="background:#f0f0f0;border-radius:8px;padding:20px 24px;text-align:center;margin-bottom:20px;">
-        <div style="font-size:.75rem;font-weight:600;color:#666;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">Athlete ID</div>
+        <div style="font-size:.75rem;font-weight:600;color:#666;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">Your Athlete ID</div>
         <div style="font-size:2rem;font-weight:800;letter-spacing:.15em;color:#111;font-variant-numeric:tabular-nums;">${athleteId}</div>
       </div>
 
@@ -53,32 +62,22 @@ function emailHtml(name: string, athleteId: string, eventId: string): string {
         <img src="${qrUrl}" alt="Athlete QR code for ${athleteId}"
              width="200" height="200"
              style="border-radius:8px;border:1px solid #e5e7eb;">
-        <div style="font-size:.75rem;color:#888;margin-top:8px;">Show this to an official on combine day</div>
+        <div style="font-size:.75rem;color:#888;margin-top:8px;">The official view will scan this to load your profile</div>
       </div>
 
-      <!-- Links -->
-      <div style="margin-bottom:28px;">
-        <a href="${confirmUrl}"
-           style="display:block;text-align:center;background:#111;color:#fff;text-decoration:none;padding:14px;border-radius:8px;font-weight:700;font-size:.95rem;">
-          View Your Registration →
-        </a>
+      <!-- Secondary links -->
+      <div style="margin-bottom:28px;display:flex;gap:8px;">
         <a href="${scoreboardUrl}"
-           style="display:block;text-align:center;background:#f3f4f6;color:#374151;text-decoration:none;padding:12px;border-radius:8px;font-size:.875rem;margin-top:8px;">
+           style="flex:1;display:block;text-align:center;background:#f3f4f6;color:#374151;text-decoration:none;padding:12px;border-radius:8px;font-size:.875rem;">
           Live Scoreboard
         </a>
+        <a href="${confirmUrl}"
+           style="flex:1;display:block;text-align:center;background:#f3f4f6;color:#374151;text-decoration:none;padding:12px;border-radius:8px;font-size:.875rem;">
+          View Registration
+        </a>
       </div>
 
-      <!-- What's next -->
-      <div style="border-top:1px solid #eee;padding-top:20px;">
-        <p style="margin:0 0 12px;font-weight:600;color:#111;font-size:.9rem;">What happens next</p>
-        <ol style="margin:0;padding-left:20px;color:#444;line-height:2;font-size:.875rem;">
-          <li>An official scans your QR code and opens your profile</li>
-          <li>You perform each combine event (pull-ups, 40-yard dash, broad jump)</li>
-          <li>Results appear live on the scoreboard as they're entered</li>
-        </ol>
-      </div>
-
-      <div style="margin-top:20px;font-size:.8rem;color:#999;line-height:1.6;">
+      <div style="border-top:1px solid #eee;padding-top:20px;font-size:.8rem;color:#999;line-height:1.6;">
         Questions? Reply to this email or reach us at
         <a href="mailto:demo@realfit.com" style="color:#2563eb;">demo@realfit.com</a>
       </div>

@@ -863,7 +863,10 @@ function renderAthletes() {
       <td>${bestDash   != null ? `<strong>${bestDash}</strong> sec`   : '<span style="color:var(--gray)">—</span>'}</td>
       <td>${bestJump   != null ? `<strong>${bestJump}"</strong>`      : '<span style="color:var(--gray)">—</span>'}</td>
       <td>${statusPill}</td>
-      <td><button class="btn-edit" onclick="openAthleteEdit('${a.id}')">Edit</button></td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn-edit" onclick="openAthleteEdit('${a.id}')">Edit</button>
+        <button class="btn-xs btn-danger-outline" onclick="deleteAthlete('${a.id}','${a.athlete_id}','${a.first_name} ${a.last_name}')">Delete</button>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -975,6 +978,17 @@ async function saveAthleteEdit() {
 document.getElementById('editAthleteModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeAthleteModal();
 });
+
+async function deleteAthlete(uuid, athleteId, name) {
+  if (!confirm(`Delete ${name} (${athleteId})?\n\nThis will permanently remove the athlete and all their results. This cannot be undone.`)) return;
+  const sb = getSB();
+  // Delete results first, then athlete row
+  await sb.from('dc_results').delete().eq('event_id', EVENT_ID).eq('athlete_id', athleteId);
+  const { error } = await sb.from('dc_athletes').delete().eq('id', uuid);
+  if (error) { alert('Delete failed: ' + error.message); return; }
+  await reloadData();
+  renderAll();
+}
 
 // ══════════════════════════════════════════
 // EXPORT
