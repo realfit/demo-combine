@@ -582,6 +582,9 @@ function demoLogin() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('officialLabel').textContent = oid;
   initScanner();
+  // Prefill manual ID field from ?prefill= URL param
+  const prefillId = new URLSearchParams(window.location.search).get('prefill');
+  if (prefillId) document.getElementById('manualId').value = prefillId.toUpperCase();
 }
 
 async function checkDemoCode() {
